@@ -1,0 +1,5 @@
+*                            @Proyecto-Maestria-Spa-Unas/equipo-frontend
+/src/services/auth/          @Proyecto-Maestria-Spa-Unas/equipo-frontend @Proyecto-Maestria-Spa-Unas/plataforma-admins
+/src/**/*.test.*             @Proyecto-Maestria-Spa-Unas/equipo-frontend @Proyecto-Maestria-Spa-Unas/equipo-qa
+/vercel.json                 @Proyecto-Maestria-Spa-Unas/equipo-frontend @Proyecto-Maestria-Spa-Unas/equipo-devops
+/.github/                    @Proyecto-Maestria-Spa-Unas/equipo-devops
