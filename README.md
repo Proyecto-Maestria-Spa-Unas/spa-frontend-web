@@ -41,11 +41,24 @@ En Windows (PowerShell):
 Copy-Item .env.example .env
 ```
 
-Contenido de `.env.example`:
+`.env.example` ya trae dos variables:
 
-```
-VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
-```
+| Variable | Valor por defecto | Uso |
+|---|---|---|
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000/api/v1` | API local (`docker compose` de spa-backend-api) o la de staging |
+| `VITE_API_MOCK` | `true` | Trabaja **sin backend** con datos simulados |
+
+### 🧪 Modo simulado (sin backend)
+
+Con `VITE_API_MOCK=true`, el cliente responde desde `src/mocks/` con la misma forma del contrato, incluidos los errores (`STOCK_INSUFICIENTE`, `VERSION_CONFLICTO`, `SIN_PERMISO`...). Usuarios de prueba, todos con contraseña `spa12345`:
+
+| Correo | Rol |
+|---|---|
+| `admin@spa.co` | Administrador (todos los permisos) |
+| `manicurista@spa.co` | Manicurista (consulta y salidas) |
+| `gerente@spa.co` | Gerente (consulta y analítica) |
+
+Cuando el endpoint real esté en staging, cambie a `VITE_API_MOCK=false` y verifique la misma pantalla contra la API.
 
 ⚠️ El archivo `.env` no debe subirse al repositorio (ya está incluido en el `.gitignore`). Solo las variables que empiezan con `VITE_` quedan disponibles en el navegador; nunca coloque secretos en ellas.
 
@@ -83,7 +96,7 @@ Esto permite:
 * Consistencia visual
 * Fácil mantenimiento
 
-Tailwind se integra mediante PostCSS (`postcss.config.js`) y se importa en `src/index.css`. Los colores de los estados del inventario (Disponible, Bajo stock, Agotado, Descontinuado) están centralizados en `src/constants/theme.js`.
+Tailwind se integra mediante PostCSS (`postcss.config.js`) y se importa en `src/index.css`. Los colores de marca y de los 4 estados del inventario son **tokens** en `src/design-system/tokens.css` (`bg-marca-primario`, `text-estado-agotado-texto`...). Ningún componente usa colores hexadecimales sueltos.
 
 ## 📁 Organización del proyecto y patrones
 
@@ -91,15 +104,21 @@ El código se organiza por capas y responsabilidades, con patrones que facilitan
 
 ### Estructura principal
 
-| Carpeta | Uso |
-|---|---|
-| `src/components/ui` | Componentes base reutilizables (Button, Input, Card, Badge, Container, Spinner, Alert). Presentacionales, configurados por props. |
-| `src/components/layout` | Componentes de estructura de página: Header, Footer, MainLayout, PageContainer. |
-| `src/constants` | Tema (colores, estados de inventario) y constantes de rutas (ROUTES). Una sola fuente de verdad para diseño y navegación. |
-| `src/utils` | Utilidades (p. ej. `cn` para clases CSS condicionales). |
-| `src/services/api` | Cliente HTTP (axios) y endpoints para consumir el API del backend (repositorio `spa-backend-api`). |
-| `src/services/auth` | Contexto de autenticación (AuthProvider, useAuth) y rutas protegidas por rol (ProtectedRoute). |
-| `src/pages` | Páginas/vistas por módulo (auth, inventario, movimientos, historial, alertas, usuarios), que componen layout + componentes UI. |
+Una carpeta de funcionalidad por pantalla y un cliente HTTP por servicio del backend. Cada carpeta de `features/` tiene un `README.md` con su alcance, sus endpoints y su responsable.
+
+| Carpeta | Uso | Responsable |
+|---|---|---|
+| `src/api/cliente.js` | Axios con `VITE_API_BASE_URL`, Bearer y errores problem+json → `ErrorApi` con `code` | Plataforma |
+| `src/api/identidad.js`, `catalogo.js`, `movimientos.js`, `analitica.js` | Una función por endpoint del contrato (31 en total) | Se cambian solo con un PR de contrato |
+| `src/mocks/` | Simulador del backend con datos de ejemplo | Quien construye la pantalla agrega casos |
+| `src/features/auth/` | Login, sesión (`useAuth`), `RutaProtegida` por permiso | Estefa44445 |
+| `src/features/usuarios/` | Gestión de usuarios (HU-09) | Estefa44445 |
+| `src/features/inventario/` | Categorías, tabla, filtros, detalle y formulario de producto | Gleidy725 |
+| `src/features/movimientos/` | Entrada, salida, historial y anulación | Gleidy725 |
+| `src/features/tablero/` | Alertas e indicadores de decisión | Estefa44445 |
+| `src/design-system/` | Tokens de marca y componentes base | Gleidy725 (tokens) y Estefa44445 (componentes) |
+| `src/layout/` | Marco con menú filtrado por permisos | Plataforma |
+| `src/constants/routes.js` | Rutas y permiso de cada opción del menú | Plataforma |
 
 ## 🧪 Pruebas y calidad
 
@@ -111,7 +130,16 @@ npm run test:ci
 npm run build
 ```
 
-Las pruebas se ubican junto al archivo que prueban con el sufijo `.test.jsx` o `.test.js`.
+Las pruebas se ubican junto al archivo que prueban con el sufijo `.test.jsx` o `.test.js`. Se ejecutan siempre en modo simulado; `src/api/api.test.js` recorre los 31 endpoints.
+
+## 🐳 Docker
+
+```
+docker build --build-arg VITE_API_BASE_URL=http://localhost:8000/api/v1 -t spa-frontend-web .
+docker run -p 8080:8080 spa-frontend-web
+```
+
+Sirve el build de producción con nginx sin privilegios en http://localhost:8080. Es la imagen que se usará en EKS (Sprint 4). Para desarrollar, use `npm run dev`.
 
 ## ☁️ Despliegue
 
@@ -119,82 +147,11 @@ El despliegue se realiza en Vercel, conectado a este repositorio:
 
 * `main` → producción.
 * Cada Pull Request → Preview Deployment con URL propia.
-* Variable requerida en Vercel: `VITE_API_BASE_URL`.
+* Variable requerida en Vercel: `VITE_API_BASE_URL` (Production y Preview). `VITE_API_MOCK` no se define en Vercel.
 
 ## 🔀 Flujo de trabajo
 
 1. Crear la rama desde `develop`: `git checkout -b feature/HU-03-consultar-inventario`.
 2. Hacer commits con Conventional Commits y firma: `git commit -s -m "feat(inventario): tabla de existencias (HU-03)"`.
-3. Abrir un Pull Request hacia `develop`.
+3. Abrir un Pull Request hacia `develop` y completar la plantilla (Definición de terminado).
 4. El PR solo se puede fusionar cuando pasan los checks `politica / pr`, `calidad / pipeline`, `seguridad / scan` (y `qa-gate / qa` cuando QA esté activo) y lo aprueba un integrante del equipo responsable.
-
-## 🌿 Cómo contribuir
-
-### 1️⃣ Clonar el repositorio (solo la primera vez)
-
-Use **Git Bash** en Windows o la terminal en Linux/Mac:
-
-```
-git config --global core.autocrlf input
-git clone https://github.com/Proyecto-Maestria-Spa-Unas/spa-frontend-web.git
-cd spa-frontend-web
-git switch develop
-```
-
-### 2️⃣ Crear la rama de su tarea
-
-Nunca se trabaja directamente sobre `main` ni `develop`: GitHub rechaza esos push. Cada tarea tiene su rama, creada desde `develop` actualizada:
-
-```
-git switch develop
-git pull
-git switch -c feature/F3-design-tokens
-```
-
-Formato obligatorio: **`tipo/ID-descripcion-corta`**. El `ID` es el de la tarea del sprint en mayúscula (D1, B2, F3, Q1…) y la descripción va en minúsculas, con guiones y sin espacios ni tildes.
-
-| Tipo | Úselo para |
-|---|---|
-| `feature/` | Funcionalidad nueva |
-| `fix/` | Corrección de un defecto |
-| `docs/` | Documentación |
-| `test/` | Pruebas |
-| `refactor/` | Mejora interna sin cambio funcional |
-| `chore/` · `ci/` | Mantenimiento y automatización |
-
-### 3️⃣ Guardar y subir los cambios
-
-```
-git add .
-git commit -s -m "feat(marca): design tokens de color y tipografía (F3)"
-git push -u origin feature/F3-design-tokens
-```
-
-El mensaje sigue **Conventional Commits**: `tipo(alcance): descripción (ID)`. La opción `-s` firma el commit.
-
-### 4️⃣ Abrir el Pull Request
-
-```
-gh pr create --base develop --fill
-```
-
-O desde GitHub con el botón **Compare & pull request**. En la descripción escriba `Closes Proyecto-Maestria-Spa-Unas/spa-frontend-web#<número de la tarea>`. El PR se fusiona cuando los checks obligatorios están en verde.
-
-### 5️⃣ Mantener su rama al día
-
-Si `develop` avanzó mientras usted trabajaba:
-
-```
-git switch develop
-git pull
-git switch -
-git rebase develop
-git push --force-with-lease
-```
-
-`--force-with-lease` solo se usa sobre **su propia rama**, nunca sobre `main` ni `develop`.
-
-### ❌ Qué no hacer
-
-* No subir archivos `.env`, contraseñas ni llaves: el escaneo de seguridad bloqueará el PR.
-* No mezclar varias tareas en una misma rama: una rama, una tarea, un PR.

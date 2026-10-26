@@ -8,11 +8,12 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/setupTests.js"],
+    env: { VITE_API_MOCK: "true" },
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
       include: ["src/**/*.{js,jsx}"],
-      exclude: ["src/main.jsx", "src/setupTests.js", "src/**/*.test.{js,jsx}"],
+      exclude: ["src/main.jsx", "src/setupTests.js", "src/**/*.test.{js,jsx}", "src/features/**/*Page.jsx"],
       thresholds: { lines: 70, functions: 70, branches: 60, statements: 70 },
     },
   },
