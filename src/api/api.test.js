@@ -114,6 +114,41 @@ describe("S3 · Movimientos", () => {
   });
 });
 
+describe("ampliación: proveedores, recuperación y kardex", () => {
+  it("recuperar contraseña responde igual exista o no la cuenta", async () => {
+    expect((await identidad.recuperarContrasena("nadie@spa.co")).mensaje).toContain("Si el correo");
+  });
+
+  it("gestiona proveedores con NIT único", async () => {
+    await entrarComo("admin@spa.co");
+    expect(await catalogo.listarProveedores()).toHaveLength(3);
+    const p = await catalogo.crearProveedor({ nombre: "Nuevo", nit: "900000001-1", ubicacion: { latitud: 4.6, longitud: -74.1 } });
+    await expect(catalogo.crearProveedor({ nombre: "Otro", nit: "900000001-1" })).rejects.toMatchObject({ code: "CODIGO_DUPLICADO" });
+    expect((await catalogo.actualizarProveedor(p.id, { activo: false })).activo).toBe(false);
+    expect(await catalogo.listarProveedores(true)).toHaveLength(4);
+    await expect(catalogo.actualizarProveedor("no-existe", {})).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("proveedores cercanos en GeoJSON ordenados por distancia", async () => {
+    await entrarComo("gerente@spa.co");
+    const geo = await analitica.proveedoresCercanos(4.6486, -74.0628, 10);
+    expect(geo.type).toBe("FeatureCollection");
+    expect(geo.features.map((f) => f.properties.nombre)).toEqual(["Distribuidora Belleza Total", "Insumos Nail Pro"]);
+    expect(geo.features[0].geometry.coordinates).toEqual([-74.0645, 4.6484]);
+  });
+
+  it("kardex valorizado por costo promedio ponderado", async () => {
+    await entrarComo("admin@spa.co");
+    await movimientos.registrarEntrada({ producto_id: ACETONA, cantidad: "150", motivo_codigo: "COMPRA", costo_unitario: "42" });
+    const k = await analitica.kardex(ACETONA);
+    expect(k.metodo).toBe("PROMEDIO_PONDERADO");
+    expect(k.lineas[2].costo_promedio).toBe("39.2000");
+    expect(k.saldo_final).toBe("500.000");
+    expect(k.valor_final).toBe("19600.0000");
+    await expect(analitica.kardex("no-existe")).rejects.toMatchObject({ status: 404 });
+  });
+});
+
 describe("S4 · Alertas y analítica", () => {
   beforeEach(() => entrarComo("gerente@spa.co"));
 

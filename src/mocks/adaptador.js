@@ -4,16 +4,18 @@
  * para que frontend construya y pruebe las pantallas antes de que el endpoint exista.
  */
 import { AxiosError, AxiosHeaders } from "axios";
-import { CATEGORIAS, MOTIVOS, MOVIMIENTOS, PERMISOS_POR_ROL, PRODUCTOS, UNIDADES, USUARIOS } from "./datos";
+import { CATEGORIAS, MOTIVOS, MOVIMIENTOS, PERMISOS_POR_ROL, PRODUCTOS, PROVEEDORES, UNIDADES, USUARIOS } from "./datos";
 
 const CONTRASENA = "spa12345";
 /** POST que crean recursos responden 201 en la API; los demás 200. */
-const CREA = /^\/(usuarios|categorias|productos|movimientos\/(entradas|salidas|\d+\/anulaciones))$/;
-const estado = { productos: structuredClone(PRODUCTOS), movimientos: structuredClone(MOVIMIENTOS), claves: new Map() };
+const CREA = /^\/(usuarios|categorias|productos|proveedores|movimientos\/(entradas|salidas|\d+\/anulaciones))$/;
+const ACEPTA = /^\/auth\/recuperar$/;
+const estado = { productos: structuredClone(PRODUCTOS), movimientos: structuredClone(MOVIMIENTOS), proveedores: structuredClone(PROVEEDORES), claves: new Map() };
 
 export function reiniciarSimulacion() {
   estado.productos = structuredClone(PRODUCTOS);
   estado.movimientos = structuredClone(MOVIMIENTOS);
+  estado.proveedores = structuredClone(PROVEEDORES);
   estado.claves = new Map();
 }
 
@@ -39,6 +41,15 @@ const pagina = (items, params = {}) => {
   return { items: items.slice((page - 1) * size, page * size), total: items.length, page, size };
 };
 const decimal = (n) => Number(n).toFixed(3);
+const costo = (n) => Number(n).toFixed(4);
+
+/** Distancia de gran círculo (haversine), equivalente a ST_Distance sobre geography para estas escalas. */
+function distanciaKm(a, b) {
+  const rad = (g) => (g * Math.PI) / 180;
+  const h = Math.sin(rad(b.latitud - a.latitud) / 2) ** 2 +
+    Math.cos(rad(a.latitud)) * Math.cos(rad(b.latitud)) * Math.sin(rad(b.longitud - a.longitud) / 2) ** 2;
+  return 2 * 6371.0088 * Math.asin(Math.sqrt(h));
+}
 
 function aplicarMovimiento(config, tipo, cuerpo, usuario) {
   const clave = config.headers?.["Idempotency-Key"] ?? config.headers?.get?.("Idempotency-Key");
@@ -54,7 +65,7 @@ function aplicarMovimiento(config, tipo, cuerpo, usuario) {
   producto.estado = saldo === 0 ? "AGOTADO" : minimo !== null && saldo <= minimo ? "BAJO_STOCK" : "DISPONIBLE";
   const movimiento = {
     id: estado.movimientos.length + 1, producto_id: producto.id, tipo, motivo_codigo: cuerpo.motivo_codigo ?? "ANULACION",
-    cantidad: decimal(cuerpo.cantidad), saldo_resultante: producto.stock_actual, costo_unitario: cuerpo.costo_unitario ?? null,
+    cantidad: decimal(cuerpo.cantidad), saldo_resultante: producto.stock_actual, costo_unitario: cuerpo.costo_unitario ?? null, proveedor_id: cuerpo.proveedor_id ?? null,
     observacion: cuerpo.observacion ?? null, registrado_por: usuario.id, ocurrido_en: new Date().toISOString(),
     movimiento_anulado_id: cuerpo.movimiento_anulado_id ?? null, anulado_por_id: null,
   };
@@ -72,6 +83,7 @@ const RUTAS = [
     if (!u.activo) throw problema(c, 403, "USUARIO_INACTIVO", "La cuenta está desactivada");
     return { access_token: `simulado.${u.id}`, token_type: "bearer", expires_in: 1800, usuario: sesion(u) };
   }],
+  ["post", /^\/auth\/recuperar$/, null, () => ({ mensaje: "Si el correo está registrado, recibirá un enlace para restablecer la contraseña." })],
   ["get", /^\/auth\/me$/, "", (_c, _m, _b, u) => sesion(u)],
   ["get", /^\/usuarios$/, "usuario.gestionar", (c) => pagina(USUARIOS, c.params)],
   ["post", /^\/usuarios$/, "usuario.gestionar", (_c, _m, b) => ({ id: crypto.randomUUID(), activo: true, creado_en: new Date().toISOString(), ...b })],
@@ -112,6 +124,18 @@ const RUTAS = [
   ["put", /^\/productos\/([\w-]+)\/stock-minimo$/, "producto.configurar_minimo", (_c, [id], b) => Object.assign(estado.productos.find((x) => x.id === id), { stock_minimo: b.stock_minimo })],
   ["post", /^\/productos\/([\w-]+)\/descontinuar$/, "producto.descontinuar", (_c, [id]) => Object.assign(estado.productos.find((x) => x.id === id), { descontinuado: true, estado: "DESCONTINUADO" })],
   ["post", /^\/productos\/([\w-]+)\/reactivar$/, "producto.descontinuar", (_c, [id]) => Object.assign(estado.productos.find((x) => x.id === id), { descontinuado: false, estado: "DISPONIBLE" })],
+  ["get", /^\/proveedores$/, "producto.consultar", (c) => estado.proveedores.filter((p) => c.params?.incluir_inactivos || p.activo)],
+  ["post", /^\/proveedores$/, "catalogo.administrar", (c, _m, b) => {
+    if (estado.proveedores.some((p) => p.nit === b.nit)) throw problema(c, 409, "CODIGO_DUPLICADO", "El NIT ya está registrado");
+    const nuevo = { id: crypto.randomUUID(), telefono: null, correo: null, direccion: null, ubicacion: null, activo: true, ...b };
+    estado.proveedores.push(nuevo);
+    return nuevo;
+  }],
+  ["patch", /^\/proveedores\/([\w-]+)$/, "catalogo.administrar", (c, [id], b) => {
+    const p = estado.proveedores.find((x) => x.id === id);
+    if (!p) throw problema(c, 404, "RECURSO_NO_EXISTE", "El proveedor no existe");
+    return Object.assign(p, b);
+  }],
   ["get", /^\/motivos-movimiento$/, "movimiento.consultar", (c) => MOTIVOS.filter((m) => !c.params?.tipo || m.aplica_a === c.params.tipo)],
   ["post", /^\/movimientos\/entradas$/, "movimiento.registrar_entrada", (c, _m, b, u) => aplicarMovimiento(c, "ENTRADA", b, u)],
   ["post", /^\/movimientos\/salidas$/, "movimiento.registrar_salida", (c, _m, b, u) => aplicarMovimiento(c, "SALIDA", b, u)],
@@ -148,6 +172,39 @@ const RUTAS = [
   })],
   ["get", /^\/analitica\/consumo$/, "analitica.consultar", () => [{ clave: "Removedores", cantidad: "150.000" }]],
   ["get", /^\/analitica\/cobertura$/, "analitica.consultar", () => [{ producto_id: PRODUCTOS[1].id, codigo: "REM-001", nombre: "Acetona pura", stock_actual: "350.000", consumo_diario_promedio: "5.000", dias_cobertura: "70.0" }]],
+  ["get", /^\/analitica\/kardex$/, "analitica.consultar", (c) => {
+    const producto = estado.productos.find((p) => p.id === c.params?.producto_id);
+    if (!producto) throw problema(c, 404, "RECURSO_NO_EXISTE", "El producto no existe");
+    let saldo = 0;
+    let promedio = 0;
+    const lineas = estado.movimientos.filter((m) => m.producto_id === producto.id).map((m) => {
+      const cantidad = Number(m.cantidad);
+      const entra = m.tipo === "ENTRADA";
+      if (entra && m.costo_unitario !== null) promedio = (saldo * promedio + cantidad * Number(m.costo_unitario)) / (saldo + cantidad);
+      saldo += entra ? cantidad : -cantidad;
+      return {
+        ocurrido_en: m.ocurrido_en, tipo: m.tipo, motivo_codigo: m.motivo_codigo, cantidad: decimal(cantidad),
+        costo_unitario: m.costo_unitario, costo_total: m.costo_unitario === null ? null : costo(cantidad * Number(m.costo_unitario)),
+        saldo: decimal(saldo), costo_promedio: costo(promedio), valor_saldo: costo(saldo * promedio),
+      };
+    });
+    return { producto_id: producto.id, codigo: producto.codigo, nombre: producto.nombre, metodo: "PROMEDIO_PONDERADO", lineas, saldo_final: decimal(saldo), valor_final: costo(saldo * promedio) };
+  }],
+  ["get", /^\/analitica\/proveedores-cercanos$/, "alerta.consultar", (c) => {
+    const origen = { latitud: Number(c.params.latitud), longitud: Number(c.params.longitud) };
+    const radio = Number(c.params.radio_km ?? 10);
+    const features = estado.proveedores
+      .filter((p) => p.activo && p.ubicacion)
+      .map((p) => ({ p, d: distanciaKm(origen, p.ubicacion) }))
+      .filter(({ d }) => d <= radio)
+      .sort((a, b) => a.d - b.d)
+      .map(({ p, d }) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [p.ubicacion.longitud, p.ubicacion.latitud] },
+        properties: { proveedor_id: p.id, nombre: p.nombre, telefono: p.telefono, distancia_km: d.toFixed(2) },
+      }));
+    return { type: "FeatureCollection", features };
+  }],
   ["get", /^\/analitica\/exportar$/, "analitica.consultar", () => new Blob(["codigo,nombre,stock_actual\nESM-001,Esmalte rojo 15 ml,24.000\n"], { type: "text/csv" })],
 ];
 
@@ -164,7 +221,7 @@ export async function adaptadorSimulado(config) {
       throw problema(config, 403, "SIN_PERMISO", `Se requiere el permiso ${permiso}`);
     }
     const data = await manejador(config, coincidencia.slice(1), cuerpo, usuario);
-    return responder(config, metodo === "post" && CREA.test(ruta) ? 201 : 200, data);
+    return responder(config, metodo === "post" && CREA.test(ruta) ? 201 : ACEPTA.test(ruta) ? 202 : 200, data);
   }
   throw problema(config, 404, "RECURSO_NO_EXISTE", `Ruta simulada no definida: ${metodo.toUpperCase()} ${ruta}`);
 }

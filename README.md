@@ -109,13 +109,14 @@ Una carpeta de funcionalidad por pantalla y un cliente HTTP por servicio del bac
 | Carpeta | Uso | Responsable |
 |---|---|---|
 | `src/api/cliente.js` | Axios con `VITE_API_BASE_URL`, Bearer y errores problem+json → `ErrorApi` con `code` | Plataforma |
-| `src/api/identidad.js`, `catalogo.js`, `movimientos.js`, `analitica.js` | Una función por endpoint del contrato (31 en total) | Se cambian solo con un PR de contrato |
+| `src/api/identidad.js`, `catalogo.js`, `movimientos.js`, `analitica.js` | Una función por endpoint del contrato (37 en total) | Se cambian solo con un PR de contrato |
 | `src/mocks/` | Simulador del backend con datos de ejemplo | Quien construye la pantalla agrega casos |
-| `src/features/auth/` | Login, sesión (`useAuth`), `RutaProtegida` por permiso | Estefa44445 |
+| `src/features/auth/` | Login, recuperación de contraseña, sesión (`useAuth`), `RutaProtegida` por permiso | Estefa44445 |
 | `src/features/usuarios/` | Gestión de usuarios (HU-09) | Estefa44445 |
 | `src/features/inventario/` | Categorías, tabla, filtros, detalle y formulario de producto | Gleidy725 |
 | `src/features/movimientos/` | Entrada, salida, historial y anulación | Gleidy725 |
-| `src/features/tablero/` | Alertas e indicadores de decisión | Estefa44445 |
+| `src/features/tablero/` | Alertas, indicadores, kardex, mapa de proveedores y exportación | Estefa44445 |
+| `src/features/proveedores/` | Proveedores georreferenciados (full-stack) | Gleidy725 |
 | `src/design-system/` | Tokens de marca y componentes base | Gleidy725 (tokens) y Estefa44445 (componentes) |
 | `src/layout/` | Marco con menú filtrado por permisos | Plataforma |
 | `src/constants/routes.js` | Rutas y permiso de cada opción del menú | Plataforma |
@@ -130,7 +131,7 @@ npm run test:ci
 npm run build
 ```
 
-Las pruebas se ubican junto al archivo que prueban con el sufijo `.test.jsx` o `.test.js`. Se ejecutan siempre en modo simulado; `src/api/api.test.js` recorre los 31 endpoints.
+Las pruebas se ubican junto al archivo que prueban con el sufijo `.test.jsx` o `.test.js`. Se ejecutan siempre en modo simulado; `src/api/api.test.js` recorre los 37 endpoints.
 
 ## 🐳 Docker
 
