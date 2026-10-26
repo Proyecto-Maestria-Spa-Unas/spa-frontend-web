@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ROUTES } from "../../constants/routes";
 import { Button } from "../../design-system/componentes/Button";
 import { useAuth } from "./AuthContext";
@@ -41,6 +41,7 @@ export function LoginPage() {
         {error && <p role="alert" className="text-sm text-estado-agotado-texto">{error}</p>}
         <Button type="submit" className="w-full" disabled={enviando}>Ingresar</Button>
       </form>
+      <Link to={ROUTES.RECUPERAR} className="mt-4 block text-center text-sm text-marca-primario">¿Olvidaste tu contraseña?</Link>
     </section>
   );
 }

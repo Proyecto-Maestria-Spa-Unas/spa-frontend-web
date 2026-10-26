@@ -4,8 +4,10 @@
 
 | Entrega | Sprint | Funciones de la API |
 |---|---|---|
-| Lista de alertas y contador en el menú | 3 | `listarAlertas(estado)`, `resumenAlertas()` |
-| Tablero de decisiones | 4 | `tablero()`, `consumo(desde, hasta, agruparPor)`, `cobertura()` |
-| Exportar CSV / Parquet | 4 | `exportar(conjunto, formato)` → Blob para descargar |
+| Lista de alertas y contador en el menú (**full-stack X4**: también los 2 endpoints) | Entrega 2 | `listarAlertas(estado)`, `resumenAlertas()` |
+| Tablero de decisiones | Entrega 2 | `tablero()`, `consumo(desde, hasta, agruparPor)`, `cobertura()` |
+| Exportar CSV / Parquet (**full-stack X5**: también el endpoint con DuckDB) | Entrega 2 | `exportar(conjunto, formato)` → Blob para descargar |
+| Mapa de proveedores cercanos (**full-stack X6**: también el endpoint PostGIS) | Entrega 2 | `proveedoresCercanos(lat, lon, radioKm)` → GeoJSON para `L.geoJSON` |
+| Kardex valorizado (lo construye ivonnelizethmoreno-cloud, X7) | Entrega 2 | `kardex(productoId, desde, hasta)` |
 
-`valor_inventario` llega `null` mientras no se decida DEC-11: muestre "No disponible".
+Para el mapa agregue `leaflet` y `react-leaflet` (`npm install leaflet react-leaflet`) y use teselas de OpenStreetMap con su atribución.

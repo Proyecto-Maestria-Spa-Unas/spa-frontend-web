@@ -2,6 +2,8 @@
 import { apiClient, datos } from "./cliente";
 
 export const login = (correo, contrasena) => datos(apiClient.post("/auth/login", { correo, contrasena }));
+/** Responde 202 aunque el correo no exista: no revela qué cuentas hay. */
+export const recuperarContrasena = (correo) => datos(apiClient.post("/auth/recuperar", { correo }));
 export const sesionActual = () => datos(apiClient.get("/auth/me"));
 
 export const listarUsuarios = (params = {}) => datos(apiClient.get("/usuarios", { params }));

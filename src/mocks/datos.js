@@ -42,6 +42,14 @@ export const PRODUCTOS = [
   { id: "p0000000-0000-4000-8000-000000000004", codigo: "HER-010", nombre: "Lima de cartón 180/240", descripcion: null, categoria_id: 3, unidad_medida_id: 1, stock_actual: "12.000", stock_minimo: null, estado: "DESCONTINUADO", descontinuado: true, version: 5, creado_en: ahora, actualizado_en: ahora },
 ];
 
+/** Coordenadas reales aproximadas de Bogotá (EPSG:4326). El spa simulado está en Chapinero. */
+export const SPA_UBICACION = { latitud: 4.6486, longitud: -74.0628 };
+export const PROVEEDORES = [
+  { id: "f0000000-0000-4000-8000-000000000001", nombre: "Distribuidora Belleza Total", nit: "900123456-7", telefono: "6015550101", correo: "ventas@bellezatotal.co", direccion: "Cl. 63 #13-20, Chapinero", ubicacion: { latitud: 4.6484, longitud: -74.0645 }, activo: true },
+  { id: "f0000000-0000-4000-8000-000000000002", nombre: "Insumos Nail Pro", nit: "901987654-3", telefono: "6015550202", correo: null, direccion: "Av. Suba #116-50", ubicacion: { latitud: 4.7029, longitud: -74.0702 }, activo: true },
+  { id: "f0000000-0000-4000-8000-000000000003", nombre: "Químicos del Sur", nit: "800555444-1", telefono: null, correo: null, direccion: "Autopista Sur #66-78, Soacha", ubicacion: { latitud: 4.5794, longitud: -74.2168 }, activo: true },
+];
+
 export const MOTIVOS = [
   { id: 1, codigo: "COMPRA", nombre: "Compra a proveedor", aplica_a: "ENTRADA" },
   { id: 2, codigo: "AJUSTE_CONTEO", nombre: "Ajuste por conteo físico", aplica_a: "ENTRADA" },
@@ -51,6 +59,6 @@ export const MOTIVOS = [
 ];
 
 export const MOVIMIENTOS = [
-  { id: 1, producto_id: PRODUCTOS[1].id, tipo: "ENTRADA", motivo_codigo: "COMPRA", cantidad: "500.000", saldo_resultante: "500.000", costo_unitario: null, observacion: null, registrado_por: USUARIOS[0].id, ocurrido_en: "2026-10-20T09:00:00-05:00", movimiento_anulado_id: null, anulado_por_id: null },
+  { id: 1, producto_id: PRODUCTOS[1].id, tipo: "ENTRADA", motivo_codigo: "COMPRA", cantidad: "500.000", saldo_resultante: "500.000", costo_unitario: "38.0000", proveedor_id: "f0000000-0000-4000-8000-000000000001", observacion: null, registrado_por: USUARIOS[0].id, ocurrido_en: "2026-10-20T09:00:00-05:00", movimiento_anulado_id: null, anulado_por_id: null },
   { id: 2, producto_id: PRODUCTOS[1].id, tipo: "SALIDA", motivo_codigo: "CONSUMO_SERVICIO", cantidad: "150.000", saldo_resultante: "350.000", costo_unitario: null, observacion: "Servicio de retiro", registrado_por: USUARIOS[1].id, ocurrido_en: "2026-10-24T15:30:00-05:00", movimiento_anulado_id: null, anulado_por_id: null },
 ];

@@ -17,3 +17,9 @@ export const configurarStockMinimo = (id, stockMinimo) =>
   datos(apiClient.put(`/productos/${id}/stock-minimo`, { stock_minimo: stockMinimo }));
 export const descontinuarProducto = (id) => datos(apiClient.post(`/productos/${id}/descontinuar`));
 export const reactivarProducto = (id) => datos(apiClient.post(`/productos/${id}/reactivar`));
+
+/** Proveedores con ubicación { latitud, longitud } (PostGIS en la base). */
+export const listarProveedores = (incluirInactivos = false) =>
+  datos(apiClient.get("/proveedores", { params: { incluir_inactivos: incluirInactivos } }));
+export const crearProveedor = (proveedor) => datos(apiClient.post("/proveedores", proveedor));
+export const actualizarProveedor = (id, cambios) => datos(apiClient.patch(`/proveedores/${id}`, cambios));
