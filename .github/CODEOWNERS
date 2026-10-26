@@ -1,5 +1,7 @@
-*                            @Proyecto-Maestria-Spa-Unas/equipo-frontend
-/src/services/auth/          @Proyecto-Maestria-Spa-Unas/equipo-frontend @Proyecto-Maestria-Spa-Unas/plataforma-admins
-/src/**/*.test.*             @Proyecto-Maestria-Spa-Unas/equipo-frontend @Proyecto-Maestria-Spa-Unas/equipo-qa
-/vercel.json                 @Proyecto-Maestria-Spa-Unas/equipo-frontend @Proyecto-Maestria-Spa-Unas/equipo-devops
-/.github/                    @Proyecto-Maestria-Spa-Unas/equipo-devops
+# Revisores que GitHub solicita automáticamente por ruta (el último patrón que coincide gana).
+*                     @Proyecto-Maestria-Spa-Unas/equipo-frontend
+/src/api/             @Proyecto-Maestria-Spa-Unas/equipo-frontend
+/Dockerfile           @Proyecto-Maestria-Spa-Unas/equipo-devops
+/nginx.conf           @Proyecto-Maestria-Spa-Unas/equipo-devops
+/vercel.json          @Proyecto-Maestria-Spa-Unas/equipo-devops
+/.github/             @Proyecto-Maestria-Spa-Unas/equipo-devops
