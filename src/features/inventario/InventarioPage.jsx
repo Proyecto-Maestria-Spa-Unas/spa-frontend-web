@@ -181,11 +181,22 @@ export function InventarioPage() {
               className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario focus:ring-2 focus:ring-[#FCEAF1]"
             >
               <option value="">Todas las categorías</option>
-              {categoriasActivas.map((categoria) => (
-                <option key={categoria.id} value={categoria.id}>
-                  {categoria.nombre}
+
+              {cargando ? (
+                <option value="" disabled>
+                  Cargando categorías...
                 </option>
-              ))}
+              ) : error ? (
+                <option value="" disabled>
+                  Error al cargar categorías
+                </option>
+              ) : (
+                categoriasActivas.map((categoria) => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
