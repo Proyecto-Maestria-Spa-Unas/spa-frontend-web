@@ -109,7 +109,15 @@ const RUTAS = [
     if (estado.productos.some((x) => x.codigo.toLowerCase() === String(b.codigo).toLowerCase())) {
       throw problema(c, 409, "CODIGO_DUPLICADO", "El código ya está registrado");
     }
-    const nuevo = { id: crypto.randomUUID(), descripcion: null, stock_actual: decimal(b.cantidad_inicial ?? 0), stock_minimo: b.stock_minimo ?? null, estado: b.cantidad_inicial ? "DISPONIBLE" : "AGOTADO", descontinuado: false, version: 1, creado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(), ...b };
+    const nuevo = { id: crypto.randomUUID(), descripcion: null, stock_actual: decimal(b.cantidad_inicial ?? 0), stock_minimo: b.stock_minimo ?? null, 
+      estado:
+  Number(b.cantidad_inicial ?? 0) === 0
+    ? "AGOTADO"
+    : b.stock_minimo != null &&
+        Number(b.cantidad_inicial) <= Number(b.stock_minimo)
+      ? "BAJO_STOCK"
+      : "DISPONIBLE", 
+      descontinuado: false, version: 1, creado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(), ...b };
     estado.productos.push(nuevo);
     return nuevo;
   }],

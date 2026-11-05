@@ -5,16 +5,160 @@
  * Ver README.md de esta carpeta para el alcance y los criterios.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "../../design-system/componentes/Button";
+import { useAuth } from "../auth/AuthContext";
 import { EstadoBadge } from "../../design-system/componentes/EstadoBadge";
 import {
   listarCategorias,
   listarProductos,
+  listarUnidades,
+  crearProducto,
 } from "../../api/catalogo";
+
+const formatearCantidad = (valor) => {
+  if (valor === null || valor === undefined) {
+    return "No definido";
+  }
+
+  return Number(valor).toLocaleString("es-CO", {
+    maximumFractionDigits: 3,
+  });
+};
 export function InventarioPage() {
+  const { tiene } = useAuth();
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+
+  // Estados de las unidades de medida
+  const [unidades, setUnidades] = useState([]);
+  const [cargandoUnidades, setCargandoUnidades] = useState(true);
+  const [errorUnidades, setErrorUnidades] = useState(null);
+
+  // Estados del formulario de creación y edición
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [erroresFormulario, setErroresFormulario] = useState({});
+  const [errorFormulario, setErrorFormulario] = useState("");
+  const [mensajeExito, setMensajeExito] = useState("");
+
+  const [formulario, setFormulario] = useState({
+    codigo: "",
+    nombre: "",
+    descripcion: "",
+    categoria_id: "",
+    unidad_medida_id: "",
+    cantidad_inicial: "",
+    stock_minimo: "",
+  });
+
+  // Actualizar los valores del formulario
+  const manejarCambioFormulario = (evento) => {
+    const { name, value } = evento.target;
+
+    setFormulario((formularioAnterior) => ({
+      ...formularioAnterior,
+      [name]: value,
+    }));
+
+    // Limpiar el error del campo cuando el usuario lo modifica
+    setErroresFormulario((erroresAnteriores) => ({
+      ...erroresAnteriores,
+      [name]: "",
+    }));
+  };
+
+  // Limpiar y cerrar el formulario
+  const cerrarFormulario = () => {
+    setMostrarFormulario(false);
+
+    setFormulario({
+      codigo: "",
+      nombre: "",
+      descripcion: "",
+      categoria_id: "",
+      unidad_medida_id: "",
+      cantidad_inicial: "",
+      stock_minimo: "",
+    });
+
+    setErroresFormulario({});
+  };
+
+  // Evitar que el formulario recargue la página
+  const manejarEnvioFormulario = async (evento) => {
+    evento.preventDefault();
+
+    const nuevosErrores = {};
+
+    if (!formulario.codigo.trim()) {
+      nuevosErrores.codigo = "El código es obligatorio";
+    }
+
+    if (!formulario.nombre.trim()) {
+      nuevosErrores.nombre = "El nombre es obligatorio";
+    }
+
+    if (!formulario.categoria_id) {
+      nuevosErrores.categoria_id = "Selecciona una categoría";
+    }
+
+    if (!formulario.unidad_medida_id) {
+      nuevosErrores.unidad_medida_id = "Selecciona una unidad de medida";
+    }
+
+    setErroresFormulario(nuevosErrores);
+    setErrorFormulario("");
+
+    if (Object.keys(nuevosErrores).length > 0) {
+      return;
+    }
+
+    const producto = {
+      codigo: formulario.codigo.trim(),
+      nombre: formulario.nombre.trim(),
+      descripcion: formulario.descripcion.trim() || null,
+      categoria_id: Number(formulario.categoria_id),
+      unidad_medida_id: Number(formulario.unidad_medida_id),
+      cantidad_inicial: formulario.cantidad_inicial
+        ? Number(formulario.cantidad_inicial)
+        : null,
+      stock_minimo: formulario.stock_minimo
+        ? Number(formulario.stock_minimo)
+        : null,
+    };
+
+    setGuardando(true);
+
+    try {
+      await crearProducto(producto);
+
+      const respuesta = await cargarProductos();
+
+      setErrorProductos(null);
+      setProductos(respuesta.items);
+      setTotalProductos(respuesta.total);
+
+      setMensajeExito("¡Producto registrado correctamente! El producto se ha agregado al inventario.");
+
+      cerrarFormulario();
+
+      cerrarFormulario();
+    } catch (error) {
+      if (error.code === "CODIGO DUPLICADO") {
+        setErrorFormulario(
+          "Este código ya está registrado. Ingresa uno diferente."
+        );
+      } else {
+        setErrorFormulario(
+          error.message || "No fue posible guardar el producto."
+        );
+      }
+    } finally {
+      setGuardando(false);
+    }
+  };
   // Estados de los productos
   const [productos, setProductos] = useState([]);
   const [cargandoProductos, setCargandoProductos] = useState(true);
@@ -58,44 +202,99 @@ export function InventarioPage() {
     cargarCategorias();
   }, []);
 
+  // Cargar unidades de medida
   useEffect(() => {
-    async function cargarProductos() {
+    const cargarUnidades = async () => {
       try {
-        setCargandoProductos(true);
-        setErrorProductos(null);
+        setCargandoUnidades(true);
+        setErrorUnidades(null);
 
-        const respuesta = await listarProductos({
-          q: busqueda,
-          categoria_id: categoriaSeleccionada || undefined,
-          estado: estadoSeleccionado || undefined,
-          incluir_descontinuados: incluirDescontinuados,
-          page: pagina,
-          size: tamanoPagina,
-        });
-
-        setProductos(respuesta.items);
-        setTotalProductos(respuesta.total);
-
+        const respuesta = await listarUnidades();
+        setUnidades(respuesta);
       } catch (err) {
-        setErrorProductos(
-          err.message || "No fue posible cargar los productos."
-        );
+        setErrorUnidades(err.message || "No fue posible cargar las unidades.");
       } finally {
-        setCargandoProductos(false);
+        setCargandoUnidades(false);
       }
-    }
+    };
 
-    cargarProductos();
+    cargarUnidades();
+  }, []);
+
+  const cargarProductos = useCallback(async () => {
+    const respuesta = await listarProductos({
+      q: busqueda,
+      categoria_id: categoriaSeleccionada || undefined,
+      estado: estadoSeleccionado || undefined,
+      incluir_descontinuados: incluirDescontinuados,
+      page: pagina,
+      size: tamanoPagina,
+    });
+
+    return respuesta;
   }, [
     busqueda,
     categoriaSeleccionada,
     estadoSeleccionado,
     incluirDescontinuados,
     pagina,
+    tamanoPagina,
   ]);
+
+  useEffect(() => {
+    let activo = true;
+
+    async function obtenerProductos() {
+      try {
+        const respuesta = await cargarProductos();
+        console.log("Productos recibidos:", respuesta.items);
+
+        if (!activo) return;
+
+        setErrorProductos(null);
+        setProductos(respuesta.items);
+        setTotalProductos(respuesta.total);
+      } catch (err) {
+        if (!activo) return;
+
+        setErrorProductos(
+          err.message || "No fue posible cargar los productos."
+        );
+      } finally {
+        if (activo) {
+          setCargandoProductos(false);
+        }
+      }
+    }
+
+    obtenerProductos();
+
+    return () => {
+      activo = false;
+    };
+  }, [cargarProductos]);
+
+  useEffect(() => {
+    if (!mensajeExito) return;
+
+    const temporizador = setTimeout(() => {
+      setMensajeExito("");
+    }, 3000);
+
+    return () => clearTimeout(temporizador);
+  }, [mensajeExito]);
 
   return (
     <section className="space-y-6">
+      {mensajeExito && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-5 flex items-center gap-3 rounded-lg border border-estado-disponible-texto bg-estado-disponible-fondo p-4 text-sm text-estado-disponible-texto"
+        >
+          <span className="font-semibold">{mensajeExito}</span>
+        </div>
+      )}
       {/* Encabezado de la sección */}
       <div className="flex items-center gap-4">
         {/* Espacio reservado para el logo */}
@@ -120,20 +319,287 @@ export function InventarioPage() {
         </div>
 
         {/* Nombre y descripción */}
-        <div>
-          <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
-            NAILSPA
-          </p>
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
+              NAILSPA
+            </p>
 
-          <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#75445B]">
-            Inventario
-          </h2>
+            <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#75445B]">
+              Inventario
+            </h2>
 
-          <p className="mt-1 text-sm text-marca-texto">
-            Consulta y administra los productos registrados en tu inventario.
-          </p>
+            <p className="mt-1 text-sm text-marca-texto">
+              Consulta y administra los productos registrados en tu inventario.
+            </p>
+          </div>
+
+          {tiene("producto.crear") && (
+            <Button onClick={() => setMostrarFormulario(true)}>
+              + Crear producto
+            </Button>
+          )}
         </div>
       </div>
+
+
+      {mostrarFormulario && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-formulario"
+            onSubmit={manejarEnvioFormulario}
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-marca-borde bg-white p-6 shadow-xl"
+          >
+
+            {/* Encabezado del formulario */}
+            <div className="mb-6 border-b border-marca-borde pb-4">
+              <h3 className="font-heading text-xl font-bold text-[#75445B]">
+                Crear producto
+              </h3>
+              <p className="mt-1 text-sm text-marca-texto">
+                Registra un nuevo producto en el inventario.
+              </p>
+            </div>
+
+            <div className="space-y-7">
+
+              {/* Información general */}
+              <div>
+                <h4 className="mb-4 text-base font-semibold text-gray-900">
+                  Información general
+                </h4>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                  <div>
+                    <label htmlFor="codigo" className="mb-1 block text-sm font-medium text-gray-800">
+                      Código *
+                    </label>
+                    <input
+                      id="codigo"
+                      name="codigo"
+                      type="text"
+                      maxLength={40}
+                      value={formulario.codigo}
+                      onChange={manejarCambioFormulario}
+                      placeholder="Ej. ESM-001"
+                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    />
+                    {erroresFormulario.codigo && (
+                      <p className="mt-1 text-sm text-estado-agotado-texto">
+                        {erroresFormulario.codigo}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="nombre" className="mb-1 block text-sm font-medium text-gray-800">
+                      Nombre *
+                    </label>
+                    <input
+                      id="nombre"
+                      name="nombre"
+                      type="text"
+                      maxLength={120}
+                      value={formulario.nombre}
+                      onChange={manejarCambioFormulario}
+                      placeholder="Ej. Esmalte rojo"
+                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    />
+
+                    {erroresFormulario.nombre && (
+                      <p className="mt-1 text-sm text-estado-agotado-texto">
+                        {erroresFormulario.nombre}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="descripcion" className="mb-1 block text-sm font-medium text-gray-800">
+                      Descripción
+                    </label>
+                    <textarea
+                      id="descripcion"
+                      name="descripcion"
+                      rows={3}
+                      value={formulario.descripcion}
+                      onChange={manejarCambioFormulario}
+                      placeholder="Describe brevemente el producto..."
+                      className="w-full rounded-lg border border-marca-borde px-4 py-2 text-sm outline-none focus:border-marca-primario"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Clasificación */}
+              <div>
+                <h4 className="mb-4 text-base font-semibold text-gray-900">
+                  Clasificación del producto
+                </h4>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                  <div>
+                    <label htmlFor="categoria_id" className="mb-1 block text-sm font-medium text-gray-800">
+                      Categoría *
+                    </label>
+                    <select
+                      id="categoria_id"
+                      name="categoria_id"
+                      value={formulario.categoria_id}
+                      onChange={manejarCambioFormulario}
+                      disabled={cargando || Boolean(error)}
+                      className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario disabled:opacity-50"
+                    >
+                      <option value="">Selecciona una categoría</option>
+                      {categoriasActivas.map((categoria) => (
+                        <option key={categoria.id} value={categoria.id}>
+                          {categoria.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    {erroresFormulario.categoria_id && (
+                      <p className="mt-1 text-sm text-estado-agotado-texto">
+                        {erroresFormulario.categoria_id}
+                      </p>
+                    )}
+
+                    {cargando && (
+                      <p className="mt-1 text-xs text-marca-texto">
+                        Cargando categorías...
+                      </p>
+                    )}
+                    {error && (
+                      <p className="mt-1 text-xs text-red-600">
+                        No fue posible cargar las categorías.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="unidad_medida_id" className="mb-1 block text-sm font-medium text-gray-800">
+                      Unidad de medida *
+                    </label>
+                    <select
+                      id="unidad_medida_id"
+                      name="unidad_medida_id"
+                      value={formulario.unidad_medida_id}
+                      onChange={manejarCambioFormulario}
+                      disabled={cargandoUnidades || Boolean(errorUnidades)}
+                      className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario disabled:opacity-50"
+                    >
+                      <option value="">Selecciona una unidad</option>
+                      {unidades.map((unidad) => (
+                        <option key={unidad.id} value={unidad.id}>
+                          {unidad.nombre} ({unidad.codigo})
+                        </option>
+                      ))}
+                    </select>
+                    {erroresFormulario.unidad_medida_id && (
+                      <p className="mt-1 text-sm text-estado-agotado-texto">
+                        {erroresFormulario.unidad_medida_id}
+                      </p>
+                    )}
+
+                    {cargandoUnidades && (
+                      <p className="mt-1 text-xs text-marca-texto">
+                        Cargando unidades...
+                      </p>
+                    )}
+                    {errorUnidades && (
+                      <p className="mt-1 text-xs text-red-600">
+                        No fue posible cargar las unidades.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Configuración del inventario */}
+              <div>
+                <h4 className="mb-4 text-base font-semibold text-gray-900">
+                  Configuración del inventario
+                </h4>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                  <div>
+                    <label htmlFor="cantidad_inicial" className="mb-1 block text-sm font-medium text-gray-800">
+                      Cantidad inicial
+                    </label>
+                    <input
+                      id="cantidad_inicial"
+                      name="cantidad_inicial"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={formulario.cantidad_inicial}
+                      onChange={manejarCambioFormulario}
+                      placeholder="Ej. 24"
+                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    />
+                    <p className="mt-1 text-xs text-marca-texto">
+                      Se registrará como saldo inicial.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="stock_minimo" className="mb-1 block text-sm font-medium text-gray-800">
+                      Stock mínimo
+                    </label>
+                    <input
+                      id="stock_minimo"
+                      name="stock_minimo"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={formulario.stock_minimo}
+                      onChange={manejarCambioFormulario}
+                      placeholder="Ej. 5"
+                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                    />
+                    <p className="mt-1 text-xs text-marca-texto">
+                      Cantidad mínima antes de generar una alerta.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Acciones */}
+            <div className="mt-7 border-t border-marca-borde pt-5">
+              {errorFormulario && (
+                <div
+                  role="alert"
+                  className="mb-4 flex items-start gap-2 rounded-lg border border-estado-agotado-texto bg-estado-agotado-fondo p-3 text-sm text-estado-agotado-texto"
+                >
+                  <strong>Error:</strong>
+                  <span>{errorFormulario}</span>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={cerrarFormulario}
+                  disabled={guardando}
+                >
+                  Cancelar
+                </Button>
+
+                <Button type="submit" disabled={guardando}>
+                  {guardando ? "Guardando..." : "Guardar producto"}
+                </Button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      )}
 
       {/* Filtros del inventario */}
       <section className="mb-6 rounded-xl border border-marca-borde bg-white p-5 shadow-sm">
@@ -145,7 +611,7 @@ export function InventarioPage() {
           <div>
             <label
               htmlFor="busqueda-productos"
-              className="mb-1 block text-sm font-medium text-marca-texto"
+              className="mb-1 block text-sm font-medium text-gray-800"
             >
               Buscar
             </label>
@@ -159,14 +625,14 @@ export function InventarioPage() {
                 setPagina(1);
               }}
               placeholder="Nombre o código..."
-              className="w-full rounded-lg border border-marca-borde px-4 py-2 text-sm outline-none focus:border-marca-primario focus:ring-2 focus:ring-[#FCEAF1]"
+              className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
             />
           </div>
 
           <div>
             <label
               htmlFor="filtro-categoria"
-              className="mb-1 block text-sm font-medium text-marca-texto"
+              className="mb-1 block text-sm font-medium text-gray-800"
             >
               Categoría
             </label>
@@ -203,7 +669,7 @@ export function InventarioPage() {
           <div>
             <label
               htmlFor="filtro-estado"
-              className="mb-1 block text-sm font-medium text-marca-texto"
+              className="mb-1 block text-sm font-medium text-gray-800"
             >
               Estado
             </label>
@@ -239,7 +705,7 @@ export function InventarioPage() {
 
           <label
             htmlFor="incluir-descontinuados"
-            className="text-sm text-marca-texto"
+            className="text-sm text-gray-600"
           >
             Incluir productos descontinuados
           </label>
@@ -292,9 +758,9 @@ export function InventarioPage() {
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
                     {obtenerNombreCategoria(producto.categoria_id)}
                   </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">{producto.stock_actual}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">{formatearCantidad(producto.stock_actual)}</td>
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
-                    {producto.stock_minimo ?? "No definido"}
+                    {formatearCantidad(producto.stock_minimo)}
                   </td>
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
                     <EstadoBadge estado={producto.estado} />
