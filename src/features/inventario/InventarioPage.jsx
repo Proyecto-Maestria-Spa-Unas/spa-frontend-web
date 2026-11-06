@@ -14,6 +14,11 @@ import {
   listarProductos,
   listarUnidades,
   crearProducto,
+  actualizarProducto,
+  obtenerProducto,
+  configurarStockMinimo,
+  descontinuarProducto,
+  reactivarProducto,
 } from "../../api/catalogo";
 
 const formatearCantidad = (valor) => {
@@ -41,7 +46,9 @@ export function InventarioPage() {
   const [guardando, setGuardando] = useState(false);
   const [erroresFormulario, setErroresFormulario] = useState({});
   const [errorFormulario, setErrorFormulario] = useState("");
+  const [hayConflictoVersion, setHayConflictoVersion] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
+  const [productoEnEdicion, setProductoEnEdicion] = useState(null);
 
   const [formulario, setFormulario] = useState({
     codigo: "",
@@ -72,6 +79,8 @@ export function InventarioPage() {
   // Limpiar y cerrar el formulario
   const cerrarFormulario = () => {
     setMostrarFormulario(false);
+    setProductoEnEdicion(null);
+    setHayConflictoVersion(false);
 
     setFormulario({
       codigo: "",
@@ -84,6 +93,101 @@ export function InventarioPage() {
     });
 
     setErroresFormulario({});
+  };
+
+  const iniciarEdicion = async (producto) => {
+    setErrorFormulario("");
+    setErroresFormulario({});
+    setMensajeExito("");
+    setHayConflictoVersion(false);
+
+    try {
+      const productoCompleto = await obtenerProducto(producto.id);
+
+      setProductoEnEdicion(productoCompleto);
+
+      setFormulario({
+        codigo: productoCompleto.codigo ?? "",
+        nombre: productoCompleto.nombre ?? "",
+        descripcion: productoCompleto.descripcion ?? "",
+        categoria_id: String(productoCompleto.categoria_id ?? ""),
+        unidad_medida_id: String(productoCompleto.unidad_medida_id ?? ""),
+        cantidad_inicial: "",
+        stock_minimo: productoCompleto.stock_minimo == null
+          ? ""
+          : String(Number(productoCompleto.stock_minimo)),
+      });
+
+      setMostrarFormulario(true);
+    } catch (error) {
+      setError(error.message || "No fue posible cargar el producto.");
+    }
+  };
+
+  const recargarProductoEnEdicion = async () => {
+    try {
+      const productoActualizado = await obtenerProducto(
+        productoEnEdicion.id
+      );
+
+      setProductoEnEdicion(productoActualizado);
+
+      setFormulario({
+        codigo: productoActualizado.codigo ?? "",
+        nombre: productoActualizado.nombre ?? "",
+        descripcion: productoActualizado.descripcion ?? "",
+        categoria_id: String(productoActualizado.categoria_id ?? ""),
+        unidad_medida_id: String(productoActualizado.unidad_medida_id ?? ""),
+        cantidad_inicial: "",
+        stock_minimo: productoActualizado.stock_minimo == null
+          ? ""
+          : String(Number(productoActualizado.stock_minimo)),
+      });
+
+      setErroresFormulario({});
+      setErrorFormulario("");
+      setHayConflictoVersion(false);
+    } catch (error) {
+      setErrorFormulario(
+        error.message || "No fue posible recargar el producto."
+      );
+    }
+  };
+
+  const manejarCambioEstado = async (producto, accion) => {
+    const esDescontinuar = accion === "descontinuar";
+
+    const confirmar = window.confirm(
+      esDescontinuar
+        ? `¿Deseas descontinuar el producto "${producto.nombre}"?`
+        : `¿Deseas reactivar el producto "${producto.nombre}"?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      if (esDescontinuar) {
+        await descontinuarProducto(producto.id);
+      } else {
+        await reactivarProducto(producto.id);
+      }
+
+      const respuesta = await cargarProductos();
+
+      setProductos(respuesta.items);
+      setTotalProductos(respuesta.total);
+      setErrorProductos(null);
+
+      setMensajeExito(
+        esDescontinuar
+          ? "Producto descontinuado correctamente."
+          : "Producto reactivado correctamente."
+      );
+    } catch (error) {
+      setErrorProductos(
+        error.message || "No fue posible actualizar el estado del producto."
+      );
+    }
   };
 
   // Evitar que el formulario recargue la página
@@ -112,27 +216,56 @@ export function InventarioPage() {
     setErrorFormulario("");
 
     if (Object.keys(nuevosErrores).length > 0) {
+      setErrorFormulario(
+        "Revisa los campos del formulario e intenta nuevamente."
+      );
       return;
     }
 
     const producto = {
-      codigo: formulario.codigo.trim(),
       nombre: formulario.nombre.trim(),
       descripcion: formulario.descripcion.trim() || null,
       categoria_id: Number(formulario.categoria_id),
       unidad_medida_id: Number(formulario.unidad_medida_id),
-      cantidad_inicial: formulario.cantidad_inicial
-        ? Number(formulario.cantidad_inicial)
-        : null,
-      stock_minimo: formulario.stock_minimo
-        ? Number(formulario.stock_minimo)
-        : null,
     };
+
+    if (!productoEnEdicion) {
+      producto.codigo = formulario.codigo.trim();
+    }
+    if (!productoEnEdicion) {
+      producto.cantidad_inicial = formulario.cantidad_inicial
+        ? Number(formulario.cantidad_inicial)
+        : null;
+
+      producto.stock_minimo = formulario.stock_minimo
+        ? Number(formulario.stock_minimo)
+        : null;
+    }
 
     setGuardando(true);
 
     try {
-      await crearProducto(producto);
+      if (productoEnEdicion) {
+        await actualizarProducto(
+          productoEnEdicion.id,
+          producto,
+          productoEnEdicion.version
+        );
+
+        const stockMinimoAnterior = productoEnEdicion.stock_minimo;
+        const stockMinimoNuevo = formulario.stock_minimo === ""
+          ? null
+          : Number(formulario.stock_minimo);
+
+        if (
+          tiene("producto.configurar_minimo") &&
+          stockMinimoNuevo !== stockMinimoAnterior
+        ) {
+          await configurarStockMinimo(productoEnEdicion.id, stockMinimoNuevo);
+        }
+      } else {
+        await crearProducto(producto);
+      }
 
       const respuesta = await cargarProductos();
 
@@ -140,21 +273,40 @@ export function InventarioPage() {
       setProductos(respuesta.items);
       setTotalProductos(respuesta.total);
 
-      setMensajeExito("¡Producto registrado correctamente! El producto se ha agregado al inventario.");
-
-      cerrarFormulario();
+      setMensajeExito(
+        productoEnEdicion
+          ? "¡Producto actualizado correctamente!"
+          : "¡Producto registrado correctamente! El producto se ha agregado al inventario."
+      );
 
       cerrarFormulario();
     } catch (error) {
-      if (error.code === "CODIGO DUPLICADO") {
+      if (error.code === "CODIGO_DUPLICADO") {
         setErrorFormulario(
           "Este código ya está registrado. Ingresa uno diferente."
+        );
+      } else if (error.code === "DATOS_INVALIDOS") {
+        const erroresCampos = {};
+
+        error.errors?.forEach(({ campo, mensaje }) => {
+          erroresCampos[campo] = mensaje;
+        });
+
+        setErroresFormulario(erroresCampos);
+        setErrorFormulario(
+          "Revisa los campos del formulario e intenta nuevamente."
+        );
+      } else if (error.code === "VERSION_CONFLICTO") {
+        setHayConflictoVersion(true);
+        setErrorFormulario(
+          "Este producto fue modificado por otra persona. Recarga la información para continuar."
         );
       } else {
         setErrorFormulario(
           error.message || "No fue posible guardar el producto."
         );
       }
+
     } finally {
       setGuardando(false);
     }
@@ -356,10 +508,12 @@ export function InventarioPage() {
             {/* Encabezado del formulario */}
             <div className="mb-6 border-b border-marca-borde pb-4">
               <h3 className="font-heading text-xl font-bold text-[#75445B]">
-                Crear producto
+                {productoEnEdicion ? "Editar producto" : "Crear producto"}
               </h3>
               <p className="mt-1 text-sm text-marca-texto">
-                Registra un nuevo producto en el inventario.
+                {productoEnEdicion
+                  ? "Actualiza la información del producto seleccionado."
+                  : "Registra un nuevo producto en el inventario."}
               </p>
             </div>
 
@@ -384,8 +538,9 @@ export function InventarioPage() {
                       maxLength={40}
                       value={formulario.codigo}
                       onChange={manejarCambioFormulario}
+                      readOnly={Boolean(productoEnEdicion)}
                       placeholder="Ej. ESM-001"
-                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      className={`w-full rounded-lg border border-gray-400 ${productoEnEdicion ? "bg-gray-100 cursor-not-allowed text-gray-600" : "bg-white text-gray-900"} px-3 py-2 text-sm placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200`}
                     />
                     {erroresFormulario.codigo && (
                       <p className="mt-1 text-sm text-estado-agotado-texto">
@@ -429,6 +584,11 @@ export function InventarioPage() {
                       placeholder="Describe brevemente el producto..."
                       className="w-full rounded-lg border border-marca-borde px-4 py-2 text-sm outline-none focus:border-marca-primario"
                     />
+                    {erroresFormulario.descripcion && (
+                      <p className="mt-1 text-sm text-estado-agotado-texto">
+                        {erroresFormulario.descripcion}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -524,46 +684,61 @@ export function InventarioPage() {
                 </h4>
 
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  {!productoEnEdicion && (
+                    <div>
+                      <label htmlFor="cantidad_inicial" className="mb-1 block text-sm font-medium text-gray-800">
+                        Cantidad inicial
+                      </label>
+                      <input
+                        id="cantidad_inicial"
+                        name="cantidad_inicial"
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={formulario.cantidad_inicial}
+                        onChange={manejarCambioFormulario}
+                        placeholder="Ej. 24"
+                        className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      />
 
-                  <div>
-                    <label htmlFor="cantidad_inicial" className="mb-1 block text-sm font-medium text-gray-800">
-                      Cantidad inicial
-                    </label>
-                    <input
-                      id="cantidad_inicial"
-                      name="cantidad_inicial"
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={formulario.cantidad_inicial}
-                      onChange={manejarCambioFormulario}
-                      placeholder="Ej. 24"
-                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
-                    />
-                    <p className="mt-1 text-xs text-marca-texto">
-                      Se registrará como saldo inicial.
-                    </p>
-                  </div>
+                      {erroresFormulario.cantidad_inicial && (
+                        <p className="mt-1 text-sm text-estado-agotado-texto">
+                          {erroresFormulario.cantidad_inicial}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-marca-texto">
+                        Se registrará como saldo inicial.
+                      </p>
+                    </div>
+                  )}
 
-                  <div>
-                    <label htmlFor="stock_minimo" className="mb-1 block text-sm font-medium text-gray-800">
-                      Stock mínimo
-                    </label>
-                    <input
-                      id="stock_minimo"
-                      name="stock_minimo"
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={formulario.stock_minimo}
-                      onChange={manejarCambioFormulario}
-                      placeholder="Ej. 5"
-                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
-                    />
-                    <p className="mt-1 text-xs text-marca-texto">
-                      Cantidad mínima antes de generar una alerta.
-                    </p>
-                  </div>
+                  {(!productoEnEdicion || tiene("producto.configurar_minimo")) && (
+                    <div>
+                      <label htmlFor="stock_minimo" className="mb-1 block text-sm font-medium text-gray-800">
+                        Stock mínimo
+                      </label>
+                      <input
+                        id="stock_minimo"
+                        name="stock_minimo"
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={formulario.stock_minimo}
+                        onChange={manejarCambioFormulario}
+                        placeholder="Ej. 5"
+                        className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      />
+
+                      {erroresFormulario.stock_minimo && (
+                        <p className="mt-1 text-sm text-estado-agotado-texto">
+                          {erroresFormulario.stock_minimo}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-marca-texto">
+                        Cantidad mínima antes de generar una alerta.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -578,6 +753,15 @@ export function InventarioPage() {
                 >
                   <strong>Error:</strong>
                   <span>{errorFormulario}</span>
+                  {hayConflictoVersion && productoEnEdicion && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={recargarProductoEnEdicion}
+                    >
+                      Recargar producto
+                    </Button>
+                  )}
                 </div>
               )}
 
@@ -723,25 +907,30 @@ export function InventarioPage() {
               <th className="whitespace-nowrap px-5 py-4 font-semibold">Stock actual</th>
               <th className="whitespace-nowrap px-5 py-4 font-semibold">Stock mínimo</th>
               <th className="whitespace-nowrap px-5 py-4 font-semibold">Estado</th>
+              {(tiene("producto.editar") || tiene("producto.descontinuar")) && (
+                <th className="whitespace-nowrap px-5 py-4 font-semibold">
+                  Acciones
+                </th>
+              )}
             </tr>
           </thead>
 
           <tbody className="divide-y divide-marca-borde">
             {cargandoProductos ? (
               <tr>
-                <td colSpan="6" className="px-4 py-8 text-center text-marca-texto">
+                <td colSpan="7" className="px-4 py-8 text-center text-marca-texto">
                   Cargando productos...
                 </td>
               </tr>
             ) : errorProductos ? (
               <tr>
-                <td colSpan="6" className="px-4 py-8 text-center text-red-600">
+                <td colSpan="7" className="px-4 py-8 text-center text-red-600">
                   {errorProductos}
                 </td>
               </tr>
             ) : productos.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-4 py-8 text-center text-marca-texto">
+                <td colSpan="7" className="px-4 py-8 text-center text-marca-texto">
                   No se encontraron productos.
                 </td>
               </tr>
@@ -765,6 +954,36 @@ export function InventarioPage() {
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
                     <EstadoBadge estado={producto.estado} />
                   </td>
+
+                  {(tiene("producto.editar") || tiene("producto.descontinuar")) && (
+                    <td className="whitespace-nowrap px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        {tiene("producto.editar") && (
+                          <Button
+                            variant="secondary"
+                            onClick={() => iniciarEdicion(producto)}
+                          >
+                            Editar
+                          </Button>
+                        )}
+
+                        {tiene("producto.descontinuar") && (
+                          <Button
+                            variant="secondary"
+                            onClick={() =>
+                              manejarCambioEstado(
+                                producto,
+                                producto.descontinuado ? "reactivar" : "descontinuar"
+                              )
+                            }
+                          >
+                            {producto.descontinuado ? "Reactivar" : "Descontinuar"}
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+
                 </tr>
               ))
             )}

@@ -23,8 +23,18 @@ const responder = (config, status, data) => ({
   data, status, statusText: String(status), headers: new AxiosHeaders({ "content-type": "application/json" }), config, request: {},
 });
 
-function problema(config, status, code, detail) {
-  const respuesta = { ...responder(config, status, { type: `about:blank`, title: code, status, detail, code, errors: [] }) };
+function problema(config, status, code, detail, errors = []) {
+  const respuesta = {
+    ...responder(config, status, {
+      type: "about:blank",
+      title: code,
+      status,
+      detail,
+      code,
+      errors,
+    }),
+  };
+
   return new AxiosError(detail, String(status), config, {}, respuesta);
 }
 
@@ -109,15 +119,56 @@ const RUTAS = [
     if (estado.productos.some((x) => x.codigo.toLowerCase() === String(b.codigo).toLowerCase())) {
       throw problema(c, 409, "CODIGO_DUPLICADO", "El código ya está registrado");
     }
-    const nuevo = { id: crypto.randomUUID(), descripcion: null, stock_actual: decimal(b.cantidad_inicial ?? 0), stock_minimo: b.stock_minimo ?? null, 
+    const errores = [];
+
+    if (!b.codigo?.trim()) {
+      errores.push({
+        campo: "codigo",
+        mensaje: "El código es obligatorio.",
+      });
+    }
+
+    if (!b.nombre?.trim()) {
+      errores.push({
+        campo: "nombre",
+        mensaje: "El nombre es obligatorio.",
+      });
+    }
+
+    if (!b.categoria_id) {
+      errores.push({
+        campo: "categoria_id",
+        mensaje: "Selecciona una categoría.",
+      });
+    }
+
+    if (!b.unidad_medida_id) {
+      errores.push({
+        campo: "unidad_medida_id",
+        mensaje: "Selecciona una unidad de medida.",
+      });
+    }
+
+    if (errores.length > 0) {
+      throw problema(
+        c,
+        422,
+        "DATOS_INVALIDOS",
+        "Uno o más campos contienen datos inválidos.",
+        errores
+      );
+    }
+    const nuevo = {
+      id: crypto.randomUUID(), descripcion: null, stock_actual: decimal(b.cantidad_inicial ?? 0), stock_minimo: b.stock_minimo ?? null,
       estado:
-  Number(b.cantidad_inicial ?? 0) === 0
-    ? "AGOTADO"
-    : b.stock_minimo != null &&
-        Number(b.cantidad_inicial) <= Number(b.stock_minimo)
-      ? "BAJO_STOCK"
-      : "DISPONIBLE", 
-      descontinuado: false, version: 1, creado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(), ...b };
+        Number(b.cantidad_inicial ?? 0) === 0
+          ? "AGOTADO"
+          : b.stock_minimo != null &&
+            Number(b.cantidad_inicial) <= Number(b.stock_minimo)
+            ? "BAJO_STOCK"
+            : "DISPONIBLE",
+      descontinuado: false, version: 1, creado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(), ...b
+    };
     estado.productos.push(nuevo);
     return nuevo;
   }],
@@ -125,13 +176,110 @@ const RUTAS = [
     const p = estado.productos.find((x) => x.id === id);
     if (!p) throw problema(c, 404, "RECURSO_NO_EXISTE", "El producto no existe");
     const version = c.headers?.["If-Match"] ?? c.headers?.get?.("If-Match");
+
     if (Number(version) !== p.version) throw problema(c, 412, "VERSION_CONFLICTO", "Otro usuario modificó el producto primero");
-    Object.assign(p, b, { version: p.version + 1 });
+    const errores = [];
+
+    if (!b.nombre?.trim()) {
+      errores.push({
+        campo: "nombre",
+        mensaje: "El nombre es obligatorio.",
+      });
+    }
+
+    if (!b.categoria_id) {
+      errores.push({
+        campo: "categoria_id",
+        mensaje: "Selecciona una categoría.",
+      });
+    }
+
+    if (!b.unidad_medida_id) {
+      errores.push({
+        campo: "unidad_medida_id",
+        mensaje: "Selecciona una unidad de medida.",
+      });
+    }
+
+    if (errores.length > 0) {
+      throw problema(
+        c,
+        422,
+        "DATOS_INVALIDOS",
+        "Uno o más campos contienen datos inválidos.",
+        errores
+      );
+    }
+    Object.assign(
+      p,
+      {
+        nombre: b.nombre,
+        descripcion: b.descripcion,
+        categoria_id: b.categoria_id,
+        unidad_medida_id: b.unidad_medida_id,
+        version: p.version + 1,
+      }
+    );
     return p;
   }],
-  ["put", /^\/productos\/([\w-]+)\/stock-minimo$/, "producto.configurar_minimo", (_c, [id], b) => Object.assign(estado.productos.find((x) => x.id === id), { stock_minimo: b.stock_minimo })],
-  ["post", /^\/productos\/([\w-]+)\/descontinuar$/, "producto.descontinuar", (_c, [id]) => Object.assign(estado.productos.find((x) => x.id === id), { descontinuado: true, estado: "DESCONTINUADO" })],
-  ["post", /^\/productos\/([\w-]+)\/reactivar$/, "producto.descontinuar", (_c, [id]) => Object.assign(estado.productos.find((x) => x.id === id), { descontinuado: false, estado: "DISPONIBLE" })],
+  ["put", /^\/productos\/([\w-]+)\/stock-minimo$/, "producto.configurar_minimo", (c, [id], b) => {
+    const producto = estado.productos.find((x) => x.id === id);
+
+    if (!producto) {
+      throw problema(c, 404, "RECURSO_NO_EXISTE", "El producto no existe");
+    }
+
+    producto.stock_minimo = b.stock_minimo;
+
+    const stockActual = Number(producto.stock_actual);
+    const stockMinimo = producto.stock_minimo === null
+      ? null
+      : Number(producto.stock_minimo);
+
+    if (!producto.descontinuado) {
+      producto.estado = stockActual === 0
+        ? "AGOTADO"
+        : stockMinimo !== null && stockActual <= stockMinimo
+          ? "BAJO_STOCK"
+          : "DISPONIBLE";
+    }
+
+    return producto;
+  }],
+  ["post", /^\/productos\/([\w-]+)\/descontinuar$/, "producto.descontinuar", (c, [id]) => {
+    const producto = estado.productos.find((x) => x.id === id);
+
+    if (!producto) {
+      throw problema(c, 404, "RECURSO_NO_EXISTE", "El producto no existe");
+    }
+
+    producto.descontinuado = true;
+    producto.estado = "DESCONTINUADO";
+
+    return producto;
+  }],
+  ["post", /^\/productos\/([\w-]+)\/reactivar$/, "producto.descontinuar", (c, [id]) => {
+    const producto = estado.productos.find((x) => x.id === id);
+
+    if (!producto) {
+      throw problema(c, 404, "RECURSO_NO_EXISTE", "El producto no existe");
+    }
+
+    producto.descontinuado = false;
+
+    const stockActual = Number(producto.stock_actual);
+    const stockMinimo = producto.stock_minimo == null
+      ? null
+      : Number(producto.stock_minimo);
+
+    producto.estado = stockActual === 0
+      ? "AGOTADO"
+      : stockMinimo !== null && stockActual <= stockMinimo
+        ? "BAJO_STOCK"
+        : "DISPONIBLE";
+
+    return producto;
+  }],
   ["get", /^\/proveedores$/, "producto.consultar", (c) => estado.proveedores.filter((p) => c.params?.incluir_inactivos || p.activo)],
   ["post", /^\/proveedores$/, "catalogo.administrar", (c, _m, b) => {
     if (estado.proveedores.some((p) => p.nit === b.nit)) throw problema(c, 409, "CODIGO_DUPLICADO", "El NIT ya está registrado");
