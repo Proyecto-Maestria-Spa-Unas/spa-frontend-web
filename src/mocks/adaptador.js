@@ -179,22 +179,22 @@ const RUTAS = [
 
     if (Number(version) !== p.version) throw problema(c, 412, "VERSION_CONFLICTO", "Otro usuario modificó el producto primero");
     const errores = [];
-
-    if (!b.nombre?.trim()) {
+    const cambios = { ...p, ...b };
+    if (!cambios.nombre?.trim()) {
       errores.push({
         campo: "nombre",
         mensaje: "El nombre es obligatorio.",
       });
     }
 
-    if (!b.categoria_id) {
+    if (!cambios.categoria_id) {
       errores.push({
         campo: "categoria_id",
         mensaje: "Selecciona una categoría.",
       });
     }
 
-    if (!b.unidad_medida_id) {
+    if (!cambios.unidad_medida_id) {
       errores.push({
         campo: "unidad_medida_id",
         mensaje: "Selecciona una unidad de medida.",
@@ -210,16 +210,13 @@ const RUTAS = [
         errores
       );
     }
-    Object.assign(
-      p,
-      {
-        nombre: b.nombre,
-        descripcion: b.descripcion,
-        categoria_id: b.categoria_id,
-        unidad_medida_id: b.unidad_medida_id,
-        version: p.version + 1,
-      }
-    );
+    Object.assign(p, {
+      nombre: cambios.nombre,
+      descripcion: cambios.descripcion,
+      categoria_id: cambios.categoria_id,
+      unidad_medida_id: cambios.unidad_medida_id,
+      version: p.version + 1,
+    });
     return p;
   }],
   ["put", /^\/productos\/([\w-]+)\/stock-minimo$/, "producto.configurar_minimo", (c, [id], b) => {
