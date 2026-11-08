@@ -4,6 +4,7 @@ import { LoginPage } from "./features/auth/LoginPage";
 import { RecuperarPage } from "./features/auth/RecuperarPage";
 import { RutaProtegida } from "./features/auth/RutaProtegida";
 import { InventarioPage } from "./features/inventario/InventarioPage";
+import { ProductoDetallePage } from "./features/inventario/ProductoDetallePage";
 import { HistorialPage } from "./features/movimientos/HistorialPage";
 import { MovimientosPage } from "./features/movimientos/MovimientosPage";
 import { ProveedoresPage } from "./features/proveedores/ProveedoresPage";
@@ -20,6 +21,9 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path={ROUTES.INVENTARIO} element={<InventarioPage />} />
           <Route path={ROUTES.PROVEEDORES} element={<ProveedoresPage />} />
+          <Route element={<RutaProtegida permiso="analitica.consultar" />}>
+            <Route path={ROUTES.PRODUCTO} element={<ProductoDetallePage />} />
+          </Route>
           <Route element={<RutaProtegida permiso="movimiento.registrar_salida" />}>
             <Route path={ROUTES.MOVIMIENTOS} element={<MovimientosPage />} />
           </Route>
