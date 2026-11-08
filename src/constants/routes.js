@@ -3,6 +3,7 @@ export const ROUTES = Object.freeze({
   LOGIN: "/login",
   RECUPERAR: "/recuperar",
   INVENTARIO: "/inventario",
+  PRODUCTO: "/inventario/:id",
   MOVIMIENTOS: "/movimientos",
   HISTORIAL: "/historial",
   TABLERO: "/tablero",
@@ -18,3 +19,6 @@ export const MENU = Object.freeze([
   { ruta: ROUTES.PROVEEDORES, etiqueta: "Proveedores", permiso: "producto.consultar" },
   { ruta: ROUTES.USUARIOS, etiqueta: "Usuarios", permiso: "usuario.gestionar" },
 ]);
+
+/** Ruta del detalle de un producto con su kardex valorizado (X7). */
+export const rutaProducto = (id) => `/inventario/${id}`;

@@ -8,7 +8,10 @@
 | Tabla de inventario con filtros por categoría, estado y búsqueda | 2 | `listarProductos({ categoria_id, estado, q })` |
 | Detalle y formulario de producto (crear y editar con `version`) | 2 | `crearProducto`, `actualizarProducto(id, cambios, version)` |
 | Stock mínimo y descontinuar / reactivar | 2 | `configurarStockMinimo`, `descontinuarProducto`, `reactivarProducto` |
+| **X7 · Detalle con kardex valorizado** (ivonnelizethmoreno-cloud) · `/inventario/:id`, permiso `analitica.consultar` | 2 | `obtenerProducto(id)`, `kardex(id, desde, hasta)` (analitica.js) |
 
 Errores que la pantalla debe mostrar por `code`: `CODIGO_DUPLICADO`, `VERSION_CONFLICTO` (recargar y reintentar), `DATOS_INVALIDOS` (marcar campos con `error.errors`).
 
 Use `EstadoBadge` del design system para el estado de cada producto. Botones visibles solo si `useAuth().tiene(permiso)`.
+
+Cada fila de la tabla de inventario enlaza al detalle con `rutaProducto(producto.id)` de `src/constants/routes.js` (decisión de PO del 07-nov, spa-backend-api#38).
