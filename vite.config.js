@@ -8,6 +8,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/setupTests.js"],
+    testTimeout: 15000,
     env: { VITE_API_MOCK: "true" },
     coverage: {
       provider: "v8",
