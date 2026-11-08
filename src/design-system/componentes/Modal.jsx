@@ -89,7 +89,9 @@ export function Modal({ open, onClose, title, children, footer, className }) {
             <span aria-hidden="true">×</span>
           </button>
         </div>
-        <div className="px-6 py-4 text-sm text-marca-texto">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 text-sm text-marca-texto">
+          {children}
+        </div>
         {footer && <div className="flex justify-end gap-2 border-t border-marca-borde px-6 py-3">{footer}</div>}
       </div>
     </div>,
