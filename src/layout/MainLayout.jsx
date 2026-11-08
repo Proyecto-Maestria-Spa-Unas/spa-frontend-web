@@ -1,7 +1,8 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { MENU } from "../constants/routes";
+import { MENU, ROUTES } from "../constants/routes";
 import { useAuth } from "../features/auth/AuthContext";
 import { Button } from "../design-system/componentes/Button";
+import { ContadorAlertas } from "../features/tablero/ContadorAlertas";
 
 /** Marco de la aplicación: menú filtrado por permisos de la sesión. */
 export function MainLayout() {
@@ -12,9 +13,12 @@ export function MainLayout() {
         <h1 className="text-lg font-semibold text-marca-primario">Spa de Uñas · Inventario</h1>
         <nav aria-label="Principal" className="flex gap-4 text-sm">
           {MENU.filter((m) => tiene(m.permiso)).map((m) => (
-            <NavLink key={m.ruta} to={m.ruta} className={({ isActive }) => (isActive ? "font-semibold" : "")}>
-              {m.etiqueta}
-            </NavLink>
+            <span key={m.ruta} className="inline-flex items-center gap-1">
+              <NavLink to={m.ruta} className={({ isActive }) => (isActive ? "font-semibold" : "")}>
+                {m.etiqueta}
+              </NavLink>
+              {m.ruta === ROUTES.TABLERO && <ContadorAlertas />}
+            </span>
           ))}
         </nav>
         <div className="flex items-center gap-3 text-sm">
