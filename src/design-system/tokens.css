@@ -1,9 +1,3 @@
-/*
- * Tokens de marca (Tailwind v4 · @theme). F3 · Gleidy725 reemplaza estos valores provisionales
- * por los del manual de marca (F2). Regla: ningún componente usa colores hexadecimales sueltos;
- * todos usan estos tokens (bg-marca-primario, text-estado-agotado-texto, ...).
- */
-
 @theme {
   /*Colores específicos del manual de marca*/
   --color-marca-primario: #C77D9F;
@@ -13,6 +7,23 @@
   --color-marca-fondo: #F5F5F5;
   --color-marca-borde: #E0E0E0;
   --color-marca-texto: #6B6B6B;
+
+    /* Textos y superficies auxiliares */
+  --color-marca-texto-principal: #1F2937;
+  --color-marca-texto-secundario: #555555;
+  --color-marca-texto-etiqueta: #374151;
+  --color-marca-texto-placeholder: #6B7280;
+  --color-marca-superficie-suave: #F9FAFB;
+  --color-marca-superficie-deshabilitada: #F3F4F6;
+  --color-marca-borde-fuerte: #9CA3AF;
+  --color-marca-error: #DC2626;
+  --color-marca-error-fondo: #FEF2F2;
+  --color-marca-error-borde: #FCA5A5;
+  --color-marca-exito: #166534;
+  --color-marca-exito-fondo: #F0FDF4;
+  --color-marca-exito-borde: #86EFAC;
+  --color-marca-enfoque: #FCEAF1;
+  --color-marca-superficie-hover: #FFFAFC;
 
   /* Disponible */
   --color-estado-disponible-fondo: #D1FAE5;

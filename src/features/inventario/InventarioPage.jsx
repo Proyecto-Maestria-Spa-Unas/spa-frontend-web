@@ -7,7 +7,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "../../design-system/componentes/Button";
+import { Modal } from "../../design-system/componentes/Modal";
 import { useAuth } from "../auth/AuthContext";
+import { Link } from "react-router-dom";
 import { EstadoBadge } from "../../design-system/componentes/EstadoBadge";
 import {
   listarCategorias,
@@ -399,10 +401,7 @@ export function InventarioPage() {
     async function obtenerProductos() {
       try {
         const respuesta = await cargarProductos();
-        console.log("Productos recibidos:", respuesta.items);
-
         if (!activo) return;
-
         setErrorProductos(null);
         setProductos(respuesta.items);
         setTotalProductos(respuesta.total);
@@ -450,7 +449,7 @@ export function InventarioPage() {
       {/* Encabezado de la sección */}
       <div className="flex items-center gap-4">
         {/* Espacio reservado para el logo */}
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-pink-200 bg-pink-50">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-marca-acento bg-marca-enfoque">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="32"
@@ -477,7 +476,7 @@ export function InventarioPage() {
               NAILSPA
             </p>
 
-            <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#75445B]">
+            <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
               Inventario
             </h2>
 
@@ -495,299 +494,297 @@ export function InventarioPage() {
       </div>
 
 
-      {mostrarFormulario && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <form
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="titulo-formulario"
-            onSubmit={manejarEnvioFormulario}
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-marca-borde bg-white p-6 shadow-xl"
-          >
+      <Modal
+        open={mostrarFormulario}
+        onClose={cerrarFormulario}
+        title={productoEnEdicion ? "Editar producto" : "Crear producto"}
+        className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden"
+        footer={
+          <div className="w-full">
+            {errorFormulario && (
+              <div
+                role="alert"
+                className="mb-4 flex items-start gap-2 rounded-lg border border-estado-agotado-texto bg-estado-agotado-fondo p-3 text-sm text-estado-agotado-texto"
+              >
+                <strong>Error:</strong>
+                <span>{errorFormulario}</span>
+                {hayConflictoVersion && productoEnEdicion && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={recargarProductoEnEdicion}
+                  >
+                    Recargar producto
+                  </Button>
+                )}
+              </div>
+            )}
 
-            {/* Encabezado del formulario */}
-            <div className="mb-6 border-b border-marca-borde pb-4">
-              <h3 className="font-heading text-xl font-bold text-[#75445B]">
-                {productoEnEdicion ? "Editar producto" : "Crear producto"}
-              </h3>
-              <p className="mt-1 text-sm text-marca-texto">
-                {productoEnEdicion
-                  ? "Actualiza la información del producto seleccionado."
-                  : "Registra un nuevo producto en el inventario."}
-              </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={cerrarFormulario}
+                disabled={guardando}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="submit"
+                form="formulario-producto"
+                disabled={guardando}
+              >
+                {guardando ? "Guardando..." : "Guardar producto"}
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <form
+          id="formulario-producto"
+          onSubmit={manejarEnvioFormulario}
+          className="space-y-7"
+        >
+
+          <p className="mb-6 text-sm text-marca-texto">
+            {productoEnEdicion
+              ? "Actualiza la información del producto seleccionado."
+              : "Registra un nuevo producto en el inventario."}
+          </p>
+
+          <div className="space-y-7">
+
+            {/* Información general */}
+            <div>
+              <h4 className="mb-4 text-base font-semibold text-marca-texto-principal">
+                Información general
+              </h4>
+
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                <div>
+                  <label htmlFor="codigo" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                    Código *
+                  </label>
+                  <input
+                    id="codigo"
+                    name="codigo"
+                    type="text"
+                    maxLength={40}
+                    value={formulario.codigo}
+                    onChange={manejarCambioFormulario}
+                    readOnly={Boolean(productoEnEdicion)}
+                    placeholder="Ej. ESM-001"
+                    className={`w-full rounded-lg border border-marca-borde-fuerte ${productoEnEdicion ? "bg-marca-superficie-deshabilitada cursor-not-allowed text-marca-texto-secundario" : "bg-white text-marca-texto-principal"} px-3 py-2 text-sm placeholder:text-marca-texto-placeholder focus:border-marca-primario-hover focus:outline-none focus:ring-2 focus:ring-marca-enfoque`}
+                  />
+                  {erroresFormulario.codigo && (
+                    <p className="mt-1 text-sm text-estado-agotado-texto">
+                      {erroresFormulario.codigo}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="nombre" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                    Nombre *
+                  </label>
+                  <input
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    maxLength={120}
+                    value={formulario.nombre}
+                    onChange={manejarCambioFormulario}
+                    placeholder="Ej. Esmalte rojo"
+                    className="w-full rounded-lg border border-marca-borde-fuerte bg-white px-3 py-2 text-sm text-marca-texto-principal placeholder:text-marca-texto-placeholder focus:border-marca-primario-hover focus:outline-none focus:ring-2 focus:ring-marca-enfoque"
+                  />
+
+                  {erroresFormulario.nombre && (
+                    <p className="mt-1 text-sm text-estado-agotado-texto">
+                      {erroresFormulario.nombre}
+                    </p>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label htmlFor="descripcion" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                    Descripción
+                  </label>
+                  <textarea
+                    id="descripcion"
+                    name="descripcion"
+                    rows={3}
+                    value={formulario.descripcion}
+                    onChange={manejarCambioFormulario}
+                    placeholder="Describe brevemente el producto..."
+                    className="w-full rounded-lg border border-marca-borde px-4 py-2 text-sm outline-none focus:border-marca-primario"
+                  />
+                  {erroresFormulario.descripcion && (
+                    <p className="mt-1 text-sm text-estado-agotado-texto">
+                      {erroresFormulario.descripcion}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-7">
+            {/* Clasificación */}
+            <div>
+              <h4 className="mb-4 text-base font-semibold text-marca-texto-principal">
+                Clasificación del producto
+              </h4>
 
-              {/* Información general */}
-              <div>
-                <h4 className="mb-4 text-base font-semibold text-gray-900">
-                  Información general
-                </h4>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                  <label htmlFor="categoria_id" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                    Categoría *
+                  </label>
+                  <select
+                    id="categoria_id"
+                    name="categoria_id"
+                    value={formulario.categoria_id}
+                    onChange={manejarCambioFormulario}
+                    disabled={cargando || Boolean(error)}
+                    className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario disabled:opacity-50"
+                  >
+                    <option value="">Selecciona una categoría</option>
+                    {categoriasActivas.map((categoria) => (
+                      <option key={categoria.id} value={categoria.id}>
+                        {categoria.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  {erroresFormulario.categoria_id && (
+                    <p className="mt-1 text-sm text-estado-agotado-texto">
+                      {erroresFormulario.categoria_id}
+                    </p>
+                  )}
 
+                  {cargando && (
+                    <p className="mt-1 text-xs text-marca-texto">
+                      Cargando categorías...
+                    </p>
+                  )}
+                  {error && (
+                    <p className="mt-1 text-xs text-marca-error">
+                      No fue posible cargar las categorías.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="unidad_medida_id" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                    Unidad de medida *
+                  </label>
+                  <select
+                    id="unidad_medida_id"
+                    name="unidad_medida_id"
+                    value={formulario.unidad_medida_id}
+                    onChange={manejarCambioFormulario}
+                    disabled={cargandoUnidades || Boolean(errorUnidades)}
+                    className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario disabled:opacity-50"
+                  >
+                    <option value="">Selecciona una unidad</option>
+                    {unidades.map((unidad) => (
+                      <option key={unidad.id} value={unidad.id}>
+                        {unidad.nombre} ({unidad.codigo})
+                      </option>
+                    ))}
+                  </select>
+                  {erroresFormulario.unidad_medida_id && (
+                    <p className="mt-1 text-sm text-estado-agotado-texto">
+                      {erroresFormulario.unidad_medida_id}
+                    </p>
+                  )}
+
+                  {cargandoUnidades && (
+                    <p className="mt-1 text-xs text-marca-texto">
+                      Cargando unidades...
+                    </p>
+                  )}
+                  {errorUnidades && (
+                    <p className="mt-1 text-xs text-marca-error">
+                      No fue posible cargar las unidades.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Configuración del inventario */}
+            <div>
+              <h4 className="mb-4 text-base font-semibold text-marca-texto-principal">
+                Configuración del inventario
+              </h4>
+
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                {!productoEnEdicion && (
                   <div>
-                    <label htmlFor="codigo" className="mb-1 block text-sm font-medium text-gray-800">
-                      Código *
+                    <label htmlFor="cantidad_inicial" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                      Cantidad inicial
                     </label>
                     <input
-                      id="codigo"
-                      name="codigo"
-                      type="text"
-                      maxLength={40}
-                      value={formulario.codigo}
+                      id="cantidad_inicial"
+                      name="cantidad_inicial"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={formulario.cantidad_inicial}
                       onChange={manejarCambioFormulario}
-                      readOnly={Boolean(productoEnEdicion)}
-                      placeholder="Ej. ESM-001"
-                      className={`w-full rounded-lg border border-gray-400 ${productoEnEdicion ? "bg-gray-100 cursor-not-allowed text-gray-600" : "bg-white text-gray-900"} px-3 py-2 text-sm placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200`}
+                      placeholder="Ej. 24"
+                      className="w-full rounded-lg border border-marca-borde-fuerte bg-white px-3 py-2 text-sm text-marca-texto-principal placeholder:text-marca-texto-placeholder focus:border-marca-primario-hover focus:outline-none focus:ring-2 focus:ring-marca-enfoque"
                     />
-                    {erroresFormulario.codigo && (
+
+                    {erroresFormulario.cantidad_inicial && (
                       <p className="mt-1 text-sm text-estado-agotado-texto">
-                        {erroresFormulario.codigo}
+                        {erroresFormulario.cantidad_inicial}
                       </p>
                     )}
+                    <p className="mt-1 text-xs text-marca-texto">
+                      Se registrará como saldo inicial.
+                    </p>
                   </div>
+                )}
 
+                {(!productoEnEdicion || tiene("producto.configurar_minimo")) && (
                   <div>
-                    <label htmlFor="nombre" className="mb-1 block text-sm font-medium text-gray-800">
-                      Nombre *
+                    <label htmlFor="stock_minimo" className="mb-1 block text-sm font-medium text-marca-texto-etiqueta">
+                      Stock mínimo
                     </label>
                     <input
-                      id="nombre"
-                      name="nombre"
-                      type="text"
-                      maxLength={120}
-                      value={formulario.nombre}
+                      id="stock_minimo"
+                      name="stock_minimo"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={formulario.stock_minimo}
                       onChange={manejarCambioFormulario}
-                      placeholder="Ej. Esmalte rojo"
-                      className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+                      placeholder="Ej. 5"
+                      className="w-full rounded-lg border border-marca-borde-fuerte bg-white px-3 py-2 text-sm text-marca-texto-principal placeholder:text-marca-texto-placeholder focus:border-marca-primario-hover focus:outline-none focus:ring-2 focus:ring-marca-enfoque"
                     />
 
-                    {erroresFormulario.nombre && (
+                    {erroresFormulario.stock_minimo && (
                       <p className="mt-1 text-sm text-estado-agotado-texto">
-                        {erroresFormulario.nombre}
+                        {erroresFormulario.stock_minimo}
                       </p>
                     )}
+                    <p className="mt-1 text-xs text-marca-texto">
+                      Cantidad mínima antes de generar una alerta.
+                    </p>
                   </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="descripcion" className="mb-1 block text-sm font-medium text-gray-800">
-                      Descripción
-                    </label>
-                    <textarea
-                      id="descripcion"
-                      name="descripcion"
-                      rows={3}
-                      value={formulario.descripcion}
-                      onChange={manejarCambioFormulario}
-                      placeholder="Describe brevemente el producto..."
-                      className="w-full rounded-lg border border-marca-borde px-4 py-2 text-sm outline-none focus:border-marca-primario"
-                    />
-                    {erroresFormulario.descripcion && (
-                      <p className="mt-1 text-sm text-estado-agotado-texto">
-                        {erroresFormulario.descripcion}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Clasificación */}
-              <div>
-                <h4 className="mb-4 text-base font-semibold text-gray-900">
-                  Clasificación del producto
-                </h4>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
-                  <div>
-                    <label htmlFor="categoria_id" className="mb-1 block text-sm font-medium text-gray-800">
-                      Categoría *
-                    </label>
-                    <select
-                      id="categoria_id"
-                      name="categoria_id"
-                      value={formulario.categoria_id}
-                      onChange={manejarCambioFormulario}
-                      disabled={cargando || Boolean(error)}
-                      className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario disabled:opacity-50"
-                    >
-                      <option value="">Selecciona una categoría</option>
-                      {categoriasActivas.map((categoria) => (
-                        <option key={categoria.id} value={categoria.id}>
-                          {categoria.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    {erroresFormulario.categoria_id && (
-                      <p className="mt-1 text-sm text-estado-agotado-texto">
-                        {erroresFormulario.categoria_id}
-                      </p>
-                    )}
-
-                    {cargando && (
-                      <p className="mt-1 text-xs text-marca-texto">
-                        Cargando categorías...
-                      </p>
-                    )}
-                    {error && (
-                      <p className="mt-1 text-xs text-red-600">
-                        No fue posible cargar las categorías.
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="unidad_medida_id" className="mb-1 block text-sm font-medium text-gray-800">
-                      Unidad de medida *
-                    </label>
-                    <select
-                      id="unidad_medida_id"
-                      name="unidad_medida_id"
-                      value={formulario.unidad_medida_id}
-                      onChange={manejarCambioFormulario}
-                      disabled={cargandoUnidades || Boolean(errorUnidades)}
-                      className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario disabled:opacity-50"
-                    >
-                      <option value="">Selecciona una unidad</option>
-                      {unidades.map((unidad) => (
-                        <option key={unidad.id} value={unidad.id}>
-                          {unidad.nombre} ({unidad.codigo})
-                        </option>
-                      ))}
-                    </select>
-                    {erroresFormulario.unidad_medida_id && (
-                      <p className="mt-1 text-sm text-estado-agotado-texto">
-                        {erroresFormulario.unidad_medida_id}
-                      </p>
-                    )}
-
-                    {cargandoUnidades && (
-                      <p className="mt-1 text-xs text-marca-texto">
-                        Cargando unidades...
-                      </p>
-                    )}
-                    {errorUnidades && (
-                      <p className="mt-1 text-xs text-red-600">
-                        No fue posible cargar las unidades.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Configuración del inventario */}
-              <div>
-                <h4 className="mb-4 text-base font-semibold text-gray-900">
-                  Configuración del inventario
-                </h4>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  {!productoEnEdicion && (
-                    <div>
-                      <label htmlFor="cantidad_inicial" className="mb-1 block text-sm font-medium text-gray-800">
-                        Cantidad inicial
-                      </label>
-                      <input
-                        id="cantidad_inicial"
-                        name="cantidad_inicial"
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={formulario.cantidad_inicial}
-                        onChange={manejarCambioFormulario}
-                        placeholder="Ej. 24"
-                        className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
-                      />
-
-                      {erroresFormulario.cantidad_inicial && (
-                        <p className="mt-1 text-sm text-estado-agotado-texto">
-                          {erroresFormulario.cantidad_inicial}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-marca-texto">
-                        Se registrará como saldo inicial.
-                      </p>
-                    </div>
-                  )}
-
-                  {(!productoEnEdicion || tiene("producto.configurar_minimo")) && (
-                    <div>
-                      <label htmlFor="stock_minimo" className="mb-1 block text-sm font-medium text-gray-800">
-                        Stock mínimo
-                      </label>
-                      <input
-                        id="stock_minimo"
-                        name="stock_minimo"
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={formulario.stock_minimo}
-                        onChange={manejarCambioFormulario}
-                        placeholder="Ej. 5"
-                        className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
-                      />
-
-                      {erroresFormulario.stock_minimo && (
-                        <p className="mt-1 text-sm text-estado-agotado-texto">
-                          {erroresFormulario.stock_minimo}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-marca-texto">
-                        Cantidad mínima antes de generar una alerta.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Acciones */}
-            <div className="mt-7 border-t border-marca-borde pt-5">
-              {errorFormulario && (
-                <div
-                  role="alert"
-                  className="mb-4 flex items-start gap-2 rounded-lg border border-estado-agotado-texto bg-estado-agotado-fondo p-3 text-sm text-estado-agotado-texto"
-                >
-                  <strong>Error:</strong>
-                  <span>{errorFormulario}</span>
-                  {hayConflictoVersion && productoEnEdicion && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={recargarProductoEnEdicion}
-                    >
-                      Recargar producto
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={cerrarFormulario}
-                  disabled={guardando}
-                >
-                  Cancelar
-                </Button>
-
-                <Button type="submit" disabled={guardando}>
-                  {guardando ? "Guardando..." : "Guardar producto"}
-                </Button>
+                )}
               </div>
             </div>
 
-          </form>
-        </div>
-      )}
+          </div>
+        </form>
+      </Modal>
 
       {/* Filtros del inventario */}
       <section className="mb-6 rounded-xl border border-marca-borde bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-heading text-lg font-semibold text-[#75445B]">
+        <h2 className="mb-4 font-heading text-lg font-semibold text-marca-primario-hover">
           Filtros del inventario
         </h2>
 
@@ -795,7 +792,7 @@ export function InventarioPage() {
           <div>
             <label
               htmlFor="busqueda-productos"
-              className="mb-1 block text-sm font-medium text-gray-800"
+              className="mb-1 block text-sm font-medium text-marca-texto-etiqueta"
             >
               Buscar
             </label>
@@ -809,14 +806,14 @@ export function InventarioPage() {
                 setPagina(1);
               }}
               placeholder="Nombre o código..."
-              className="w-full rounded-lg border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-200"
+              className="w-full rounded-lg border border-marca-borde-fuerte bg-white px-3 py-2 text-sm text-marca-texto-principal placeholder:text-marca-texto-placeholder focus:border-marca-primario-hover focus:outline-none focus:ring-2 focus:ring-marca-enfoque"
             />
           </div>
 
           <div>
             <label
               htmlFor="filtro-categoria"
-              className="mb-1 block text-sm font-medium text-gray-800"
+              className="mb-1 block text-sm font-medium text-marca-texto-etiqueta"
             >
               Categoría
             </label>
@@ -828,7 +825,7 @@ export function InventarioPage() {
                 setCategoriaSeleccionada(e.target.value);
                 setPagina(1);
               }}
-              className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario focus:ring-2 focus:ring-[#FCEAF1]"
+              className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario focus:ring-2 focus:ring-marca-enfoque"
             >
               <option value="">Todas las categorías</option>
 
@@ -853,7 +850,7 @@ export function InventarioPage() {
           <div>
             <label
               htmlFor="filtro-estado"
-              className="mb-1 block text-sm font-medium text-gray-800"
+              className="mb-1 block text-sm font-medium text-marca-texto-etiqueta"
             >
               Estado
             </label>
@@ -865,7 +862,7 @@ export function InventarioPage() {
                 setEstadoSeleccionado(e.target.value);
                 setPagina(1);
               }}
-              className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario focus:ring-2 focus:ring-[#FCEAF1]"
+              className="w-full rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm outline-none focus:border-marca-primario focus:ring-2 focus:ring-marca-enfoque"
             >
               <option value="">Todos los estados</option>
               <option value="DISPONIBLE">Disponible</option>
@@ -884,12 +881,12 @@ export function InventarioPage() {
               setIncluirDescontinuados(e.target.checked);
               setPagina(1);
             }}
-            className="h-4 w-4 accent-[#C77D9F]"
+            className="h-4 w-4 accent-marca-primario"
           />
 
           <label
             htmlFor="incluir-descontinuados"
-            className="text-sm text-gray-600"
+            className="text-sm text-marca-texto-secundario"
           >
             Incluir productos descontinuados
           </label>
@@ -899,7 +896,7 @@ export function InventarioPage() {
       <div className="w-full overflow-x-auto rounded-xl border border-marca-borde bg-marca-superficie shadow-sm">
         <table className="w-full min-w-[850px] text-left text-sm">
 
-          <thead className="bg-[#FCEAF1] font-heading text-xs uppercase tracking-wider text-[#75445B]">
+          <thead className="bg-marca-enfoque font-heading text-xs uppercase tracking-wider text-marca-primario-hover">
             <tr>
               <th className="whitespace-nowrap px-5 py-4 font-semibold">Código</th>
               <th className="whitespace-nowrap px-5 py-4 font-semibold">Producto</th>
@@ -924,7 +921,7 @@ export function InventarioPage() {
               </tr>
             ) : errorProductos ? (
               <tr>
-                <td colSpan="7" className="px-4 py-8 text-center text-red-600">
+                <td colSpan="7" className="px-4 py-8 text-center text-marca-error">
                   {errorProductos}
                 </td>
               </tr>
@@ -938,20 +935,25 @@ export function InventarioPage() {
               productos.map((producto) => (
                 <tr
                   key={producto.id}
-                  className="transition-colors duration-200 hover:bg-[#FFFAFC]"
+                  className="transition-colors duration-200 hover:bg-marca-superficie-hover"
                 >
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">{producto.codigo}</td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-[#75445B]">
-                    {producto.nombre}
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-marca-texto-secundario">{producto.codigo}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-marca-primario-hover">
+                    <Link
+                      to={`/inventario/${producto.id}`}
+                    className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-enfoque"
+                    >
+                      {producto.nombre}
+                    </Link>
                   </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-marca-texto-secundario">
                     {obtenerNombreCategoria(producto.categoria_id)}
                   </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">{formatearCantidad(producto.stock_actual)}</td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-marca-texto-secundario">{formatearCantidad(producto.stock_actual)}</td>
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-marca-texto-secundario">
                     {formatearCantidad(producto.stock_minimo)}
                   </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-sm text-[#555555]">
+                  <td className="whitespace-nowrap px-5 py-4 text-sm text-marca-texto-secundario">
                     <EstadoBadge estado={producto.estado} />
                   </td>
 
@@ -1008,7 +1010,7 @@ export function InventarioPage() {
               type="button"
               onClick={() => setPagina((actual) => actual - 1)}
               disabled={pagina === 1 || cargandoProductos}
-              className="rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm font-semibold text-[#75445B] transition hover:border-marca-primario hover:bg-[#FCEAF1] disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-marca-borde bg-white px-4 py-2 text-sm font-semibold text-marca-primario-hover transition hover:border-marca-primario hover:bg-marca-enfoque disabled:cursor-not-allowed disabled:opacity-40"
             >
               Anterior
             </button>

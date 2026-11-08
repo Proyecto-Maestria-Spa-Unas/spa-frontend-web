@@ -166,18 +166,6 @@ export function MovimientosPage() {
       setError("");
       setMensaje("");
 
-      console.log("Producto seleccionado:", productoId);
-
-      console.log(
-        "Identificadores disponibles:",
-        productos.map((producto) => ({
-          id: producto.id,
-          producto_id: producto.producto_id,
-          codigo: producto.codigo,
-          nombre: producto.nombre,
-        })),
-      );
-
       const datosMovimiento = {
         producto_id: productoId,
         motivo_codigo: motivoCodigo,
@@ -194,9 +182,6 @@ export function MovimientosPage() {
         tipo === "ENTRADA"
           ? await registrarEntrada(datosMovimiento, claveIdempotencia)
           : await registrarSalida(datosMovimiento, claveIdempotencia);
-
-      console.log("Tipo de movimiento:", tipo);
-      console.log("Respuesta del movimiento:", respuesta);
 
       try {
         const respuestaProductos = await listarProductos();
@@ -266,7 +251,7 @@ export function MovimientosPage() {
       {/* Encabezado de la sección */}
       <div className="flex items-center gap-4">
         {/* Ícono de movimientos */}
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-pink-200 bg-pink-50">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-marca-acento bg-marca-enfoque">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="32"
@@ -294,7 +279,7 @@ export function MovimientosPage() {
               NAILSPA
             </p>
 
-            <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#75445B]">
+            <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
               Movimientos
             </h2>
 
@@ -335,7 +320,7 @@ export function MovimientosPage() {
 
       {formularioAbierto && (
         <div className="mt-6 rounded-2xl border border-marca-acento bg-marca-superficie/80 p-6 shadow-lg">
-          <h3 className="mb-6 border-b border-marca-borde pb-4 font-heading text-xl font-bold text-[#75445B]">
+          <h3 className="mb-6 border-b border-marca-borde pb-4 font-heading text-xl font-bold text-marca-primario-hover">
             Registrar {tipo === "ENTRADA" ? "entrada" : "salida"}
           </h3>
 
@@ -479,7 +464,7 @@ export function MovimientosPage() {
             <div
               ref={alertaErrorRef}
               role="alert"
-              className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+              className="mt-4 rounded-lg border border-marca-error-borde bg-marca-error-fondo p-3 text-sm text-marca-error"
             >
               {error}
             </div>
@@ -514,7 +499,7 @@ export function MovimientosPage() {
         mensaje && (
           <div
             role="status"
-            className="mt-4 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800"
+            className="mt-4 rounded-lg border border-marca-exito-borde bg-marca-exito-fondo p-3 text-sm text-marca-exito"
           >
             {mensaje}
           </div>
