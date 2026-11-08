@@ -192,12 +192,37 @@ describe("UsuariosPage · alta", () => {
   it("muestra los errores por campo que devuelve el servidor (422)", async () => {
     await abrirAlta();
     identidad.crearUsuario.mockRejectedValue(
-      new ErrorApi({ status: 422, code: "DATOS_INVALIDOS", errors: [{ campo: "contrasena_temporal", mensaje: "Contraseña muy débil" }] }),
+      new ErrorApi({ status: 422, code: "DATOS_INVALIDOS", errors: [{ campo: "body.contrasena_temporal", mensaje: "Contraseña muy débil" }] }),
     );
     llenarFormulario({ nombre: "Camila Rojas", correo: "camila@spa.co", rol: "GERENTE", contrasena: "Temporal-2026" });
     fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(() => expect(screen.getByLabelText("Contraseña temporal")).toHaveAccessibleDescription(/Contraseña muy débil/));
     expect(screen.getByLabelText("Contraseña temporal")).toHaveFocus();
+  });
+
+  it("muestra el texto del servidor cuando el 422 no indica campos (contraseña débil)", async () => {
+    await abrirAlta();
+    identidad.crearUsuario.mockRejectedValue(
+      new ErrorApi({
+        status: 422,
+        code: "DATOS_INVALIDOS",
+        detail: "La contraseña temporal no cumple la política de contraseñas",
+      }),
+    );
+    llenarFormulario({ nombre: "Camila Rojas", correo: "camila@spa.co", rol: "GERENTE", contrasena: "Temporal-2026" });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("no cumple la política de contraseñas");
+    expect(screen.getByRole("dialog", { name: "Nuevo usuario" })).toBeInTheDocument();
+  });
+
+  it("si el 422 nombra un campo que el formulario no tiene, no lo pierde: muestra el aviso general", async () => {
+    await abrirAlta();
+    identidad.crearUsuario.mockRejectedValue(
+      new ErrorApi({ status: 422, code: "DATOS_INVALIDOS", detail: "Revise los campos indicados", errors: [{ campo: "body.otro", mensaje: "x" }] }),
+    );
+    llenarFormulario({ nombre: "Camila Rojas", correo: "camila@spa.co", rol: "GERENTE", contrasena: "Temporal-2026" });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Revise los campos indicados");
   });
 
   it("avisa cuando la función aún no está disponible en el servidor (501)", async () => {
