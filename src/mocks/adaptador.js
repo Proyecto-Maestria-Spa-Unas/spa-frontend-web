@@ -182,9 +182,11 @@ const RUTAS = [
       const entra = m.tipo === "ENTRADA";
       if (entra && m.costo_unitario !== null) promedio = (saldo * promedio + cantidad * Number(m.costo_unitario)) / (saldo + cantidad);
       saldo += entra ? cantidad : -cantidad;
+      // Como la API (X7, A3 §3): la salida se valora al promedio vigente.
+      const unitario = entra ? m.costo_unitario : costo(promedio);
       return {
         ocurrido_en: m.ocurrido_en, tipo: m.tipo, motivo_codigo: m.motivo_codigo, cantidad: decimal(cantidad),
-        costo_unitario: m.costo_unitario, costo_total: m.costo_unitario === null ? null : costo(cantidad * Number(m.costo_unitario)),
+        costo_unitario: unitario, costo_total: unitario === null ? null : costo(cantidad * Number(unitario)),
         saldo: decimal(saldo), costo_promedio: costo(promedio), valor_saldo: costo(saldo * promedio),
       };
     });
