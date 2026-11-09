@@ -15,12 +15,12 @@ import {
 } from "../../api/catalogo";
 
 import {
-  listarMotivos,
   registrarEntrada,
   registrarSalida,
 } from "../../api/movimientos";
 
 import { nuevaClaveIdempotencia } from "../../api/cliente";
+import { SelectorMotivoMovimiento } from "./SelectorMotivoMovimiento";
 
 export function MovimientosPage() {
   const { tiene } = useAuth();
@@ -28,7 +28,6 @@ export function MovimientosPage() {
   // Información para los selectores
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
-  const [motivos, setMotivos] = useState([]);
 
   // Estado del formulario
   const [tipo, setTipo] = useState("ENTRADA");
@@ -82,29 +81,6 @@ export function MovimientosPage() {
 
     cargarDatos();
   }, []);
-
-  useEffect(() => {
-    const cargarMotivos = async () => {
-      try {
-        setError("");
-        setMotivos([]);
-        setMotivoCodigo("");
-
-        const respuesta = await listarMotivos(tipo);
-
-        setMotivos(
-          Array.isArray(respuesta)
-            ? respuesta
-            : respuesta.items ?? [],
-        );
-      } catch (error) {
-        console.error("Error al cargar los motivos:", error);
-        setError("No fue posible cargar los motivos del movimiento.");
-      }
-    };
-
-    cargarMotivos();
-  }, [tipo]);
 
   const iniciarMovimiento = (nuevoTipo) => {
     setTipo(nuevoTipo);
@@ -356,27 +332,11 @@ export function MovimientosPage() {
                 </select>
               </div>
 
-              <div>
-                <label htmlFor="motivo" className={claseEtiqueta}>
-                  Motivo del movimiento
-                  <span className={claseObligatorio} aria-hidden="true">*</span>
-                </label>
-
-                <select
-                  id="motivo"
-                  value={motivoCodigo}
-                  onChange={(e) => setMotivoCodigo(e.target.value)}
-                  className="w-full rounded-lg border border-marca-acento bg-marca-superficie px-4 py-3 text-sm text-marca-texto shadow-sm outline-none transition-all duration-200 focus:border-marca-primario focus:ring-2 focus:ring-marca-primario/20"
-                >
-                  <option value="">Selecciona un motivo</option>
-
-                  {motivos.map((motivo) => (
-                    <option key={motivo.codigo} value={motivo.codigo}>
-                      {motivo.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SelectorMotivoMovimiento
+                tipo={tipo}
+                value={motivoCodigo}
+                onChange={setMotivoCodigo}
+              />
 
               <div>
                 <label htmlFor="cantidad" className={claseEtiqueta}>
