@@ -6,7 +6,7 @@
 |---|---|---|
 | Lista de alertas y contador en el menú (**full-stack X4**: también los 2 endpoints) · **hecho** | Entrega 2 | `listarAlertas(estado)`, `resumenAlertas()` |
 | Tablero de decisiones | Entrega 2 | `tablero()`, `consumo(desde, hasta, agruparPor)`, `cobertura()` |
-| Exportar CSV / Parquet (**full-stack X5**: también el endpoint con DuckDB) | Entrega 2 | `exportar(conjunto, formato)` → Blob para descargar |
+| Exportar CSV / Parquet (**full-stack X5**: también el endpoint con DuckDB) · **hecho** | Entrega 2 | `exportar(conjunto, formato)` → Blob para descargar |
 | Mapa de proveedores cercanos (**full-stack X6**: también el endpoint PostGIS) · **hecho** | Entrega 2 | `proveedoresCercanos(lat, lon, radioKm)` → GeoJSON para `L.geoJSON` |
 | Kardex valorizado (lo construye ivonnelizethmoreno-cloud, X7) | Entrega 2 | `kardex(productoId, desde, hasta)` |
 
@@ -15,6 +15,7 @@ El mapa usa Leaflet 1.9.4 (`npm install leaflet@1.9.4`) con teselas de OpenStree
 ## Qué hace X4
 
 * **Lista** (`ListaAlertas.jsx`): tabla con producto (nombre y código), estado, stock actual, stock mínimo y faltante. Filtro por estado: Todas, Agotado, Bajo stock. La API la entrega ordenada: agotados primero y, dentro de cada grupo, los que más faltan.
+* **Exportar datos** (`ExportarDatos.jsx`, `exportacion.js`): tarjeta con dos listas (Inventario o Movimientos; CSV o Parquet) y el botón Descargar. Solo la ven quienes tienen `analitica.consultar` (Administrador y Gerente; la Manicurista no). El archivo se llama `<conjunto>-AAAAMMDD.<formato>` con la fecha de Bogotá. Si falla, muestra un aviso (sin conexión, sesión vencida, sin permiso u otro) y se puede reintentar.
 * **Contador del menú** (`ContadorAlertas.jsx`): número de productos en alerta junto a "Alertas y tablero". Se actualiza al cambiar de pantalla y cada minuto; no se muestra si no hay alertas ni si la consulta falla.
 * **Cantidades**: la API las manda como texto ("350.000"); se muestran sin ceros de relleno y con coma decimal (`formato.js`).
 * **Errores**: se explican por `code` (`errores.js`); la lista ofrece "Reintentar".
