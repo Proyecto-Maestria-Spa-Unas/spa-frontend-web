@@ -129,14 +129,44 @@ export function ProveedoresPage() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-heading text-[1.375rem] font-semibold text-marca-texto">
-            Proveedores
-          </h2>
-          <p className="mt-1 text-sm text-marca-texto">
-            Consulta y administra los proveedores de NailsSpa.
-          </p>
+      <div className="flex items-center gap-4">
+        {/* Ícono de proveedores */}
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-marca-acento bg-marca-enfoque">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-marca-primario"
+            aria-hidden="true"
+          >
+            <path d="M10 17h4V5H2v12h3" />
+            <path d="M14 9h4l4 4v4h-3" />
+            <circle cx="7.5" cy="17.5" r="2.5" />
+            <circle cx="16.5" cy="17.5" r="2.5" />
+          </svg>
+        </div>
+
+        {/* Nombre y descripción */}
+        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
+              NAILSPA
+            </p>
+
+            <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
+              Proveedores
+            </h2>
+
+            <p className="mt-1 text-sm text-marca-texto">
+              Consulta y administra los proveedores de NailsSpa.
+            </p>
+          </div>
         </div>
 
         {puedeAdministrar && (
