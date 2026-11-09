@@ -36,7 +36,7 @@ describe("MapaProveedores", () => {
     mostrar();
     expect(screen.getByText("Buscando proveedores…")).toBeInTheDocument();
     expect(await screen.findByText("2 proveedores en 10 km")).toBeInTheDocument();
-    expect(proveedoresCercanos).toHaveBeenCalledWith(4.6097, -74.0817, 10);
+    expect(proveedoresCercanos).toHaveBeenCalledWith(4.64317, -74.06203, 10);
     expect(screen.getByText("San Andresito 18")).toBeInTheDocument();
     expect(screen.getByText("0,59 km")).toBeInTheDocument();
     expect(screen.getByText("Sin teléfono registrado")).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("MapaProveedores", () => {
     mostrar();
     await screen.findByText("2 proveedores en 10 km");
     fireEvent.change(screen.getByRole("slider"), { target: { value: "3" } });
-    await waitFor(() => expect(proveedoresCercanos).toHaveBeenLastCalledWith(4.6097, -74.0817, 3));
+    await waitFor(() => expect(proveedoresCercanos).toHaveBeenLastCalledWith(4.64317, -74.06203, 3));
     expect(await screen.findByText("2 proveedores en 3 km")).toBeInTheDocument();
     expect(screen.getByTestId("mapa")).toHaveAttribute("data-radio", "3");
   });
@@ -88,7 +88,7 @@ describe("MapaProveedores", () => {
     expect(proveedoresCercanos).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText("Latitud"), { target: { value: "4.65" } });
-    await waitFor(() => expect(proveedoresCercanos).toHaveBeenCalledWith(4.65, -74.0817, 10));
+    await waitFor(() => expect(proveedoresCercanos).toHaveBeenCalledWith(4.65, -74.06203, 10));
     expect(screen.queryByText("La latitud va entre -90 y 90.")).not.toBeInTheDocument();
   });
 

@@ -15,6 +15,13 @@ const ICONO_PROVEEDOR = L.divIcon({
   iconAnchor: [8, 8],
   popupAnchor: [0, -10],
 });
+const ICONO_SEDE = L.divIcon({
+  className: "",
+  html: '<span class="flex size-7 items-center justify-center rounded-full border-2 border-marca-superficie bg-marca-texto text-xs font-bold text-marca-superficie shadow">S</span>',
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
+  popupAnchor: [0, -16],
+});
 const ICONO_PUNTO = L.divIcon({
   className: "",
   html: '<span class="block size-5 rotate-45 border-2 border-marca-superficie bg-marca-texto shadow"></span>',
@@ -22,7 +29,7 @@ const ICONO_PUNTO = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-export function MapaLeaflet({ punto, radioKm, coleccion, alElegirPunto }) {
+export function MapaLeaflet({ punto, radioKm, coleccion, alElegirPunto, sede }) {
   const contenedor = useRef(null);
   const mapa = useRef(null);
   const capas = useRef({});
@@ -67,6 +74,27 @@ export function MapaLeaflet({ punto, radioKm, coleccion, alElegirPunto }) {
     if (x > 0 && y > 0) instancia.fitBounds(capas.current.circulo.getBounds(), { padding: [16, 16] });
     else instancia.setView(centro, 12); // contenedor sin tamaño (p. ej. pruebas): fitBounds no puede calcular el zoom
   }, [punto.latitud, punto.longitud, radioKm]);
+
+  // Sede del spa: marcador fijo, distinto del punto de búsqueda y de los proveedores.
+  useEffect(() => {
+    const instancia = mapa.current;
+    if (!instancia || !sede) return undefined;
+    const caja = document.createElement("div");
+    const titulo = document.createElement("strong");
+    titulo.textContent = sede.nombre;
+    const direccion = document.createElement("div");
+    direccion.textContent = sede.direccion;
+    caja.append(titulo, direccion);
+    const marcador = L.marker([sede.latitud, sede.longitud], {
+      icon: ICONO_SEDE,
+      keyboard: false,
+      title: `Sede: ${sede.nombre}`,
+      zIndexOffset: 1000,
+    })
+      .bindPopup(caja)
+      .addTo(instancia);
+    return () => marcador.remove();
+  }, [sede]);
 
   // Proveedores: el GeoJSON de la API se dibuja tal cual (L.geoJSON lee [longitud, latitud]).
   useEffect(() => {

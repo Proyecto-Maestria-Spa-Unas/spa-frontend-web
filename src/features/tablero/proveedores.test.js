@@ -1,6 +1,7 @@
 import {
   ATRIBUCION,
   PUNTO_INICIAL,
+  SEDE,
   URL_TESELAS,
   contenidoGlobo,
   descargarGeoJson,
@@ -15,6 +16,8 @@ describe("validarPunto", () => {
     expect(validarPunto({ latitud: 90, longitud: 180 })).toEqual({});
     expect(validarPunto({ latitud: -90, longitud: -180 })).toEqual({});
     expect(validarPunto(PUNTO_INICIAL)).toEqual({});
+    expect(PUNTO_INICIAL).toEqual({ latitud: SEDE.latitud, longitud: SEDE.longitud });
+    expect(validarPunto(SEDE)).toEqual({});
   });
 
   it("pide la latitud y la longitud cuando están vacías o no son números", () => {
