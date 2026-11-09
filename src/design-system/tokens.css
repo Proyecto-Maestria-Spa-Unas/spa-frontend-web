@@ -32,6 +32,9 @@
   /* Bajo stock */
   --color-estado-bajo-fondo: #FFF1CC;
   --color-estado-bajo-texto: #8A5A00;
+  --color-estado-bajo-fondo: #FFF1CC;
+  --color-estado-bajo-texto: #8A5A00;
+  --color-estado-bajo-barra: #F2B600;
 
   /* Agotado */
   --color-estado-agotado-fondo: #FEE2E2;
