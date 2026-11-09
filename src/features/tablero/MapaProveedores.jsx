@@ -15,6 +15,7 @@ import {
   RADIO_INICIAL_KM,
   RADIO_MAX_KM,
   RADIO_MIN_KM,
+  SEDE,
   descargarGeoJson,
   formatoDistancia,
   redondearCoordenada,
@@ -130,7 +131,7 @@ export function MapaProveedores({ espera = ESPERA_MS }) {
         </div>
       </div>
 
-      <MapaLeaflet punto={punto} radioKm={radioKm} coleccion={coleccion} alElegirPunto={elegirEnElMapa} />
+      <MapaLeaflet punto={punto} radioKm={radioKm} coleccion={coleccion} alElegirPunto={elegirEnElMapa} sede={SEDE} />
 
       <div className="mt-4">
         {estado === "cargando" && <p role="status">Buscando proveedores…</p>}

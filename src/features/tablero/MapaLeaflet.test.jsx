@@ -32,6 +32,21 @@ const VACIA = { type: "FeatureCollection", features: [] };
 const marcadores = (contenedor) => contenedor.querySelectorAll(".leaflet-marker-icon");
 
 describe("MapaLeaflet", () => {
+  it("marca la sede con un marcador propio y su dirección en el globo", () => {
+    const sede = { nombre: "Sede NailsSpa", direccion: "Calle 57 # 7-11, Bogotá", latitud: 4.64317, longitud: -74.06203 };
+    const { container } = render(<MapaLeaflet punto={PUNTO} radioKm={10} coleccion={COLECCION} sede={sede} />);
+    expect(marcadores(container)).toHaveLength(4); // sede + punto + 2 proveedores
+    const marcador = container.querySelector('[title="Sede: Sede NailsSpa"]');
+    expect(marcador).not.toBeNull();
+    fireEvent.click(marcador);
+    expect(container.querySelector(".leaflet-popup-content")).toHaveTextContent("Calle 57 # 7-11, Bogotá");
+  });
+
+  it("sin sede no dibuja su marcador", () => {
+    const { container } = render(<MapaLeaflet punto={PUNTO} radioKm={10} coleccion={VACIA} />);
+    expect(container.querySelector('[title^="Sede:"]')).toBeNull();
+  });
+
   it("crea el mapa con OpenStreetMap, su atribución y un nombre accesible", () => {
     const { getByRole, container } = render(<MapaLeaflet punto={PUNTO} radioKm={10} coleccion={VACIA} />);
     expect(getByRole("region", { name: "Mapa de proveedores cercanos" })).toHaveClass("leaflet-container");

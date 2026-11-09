@@ -1,7 +1,15 @@
 /** Reglas y utilidades del mapa de proveedores cercanos (X6). Sin dependencias de React ni de Leaflet. */
 
-/** Punto de búsqueda inicial: centro de Bogotá. El usuario lo cambia escribiendo coordenadas o haciendo clic en el mapa. */
-export const PUNTO_INICIAL = Object.freeze({ latitud: 4.6097, longitud: -74.0817 });
+/** Sede del spa (Calle 57 # 7-11, Bogotá; 4°38'35,4"N 74°03'43,3"W). Una sola sede: el modelo multisede es un escenario de escalabilidad. */
+export const SEDE = Object.freeze({
+  nombre: "Sede NailsSpa",
+  direccion: "Calle 57 # 7-11, Bogotá",
+  latitud: 4.64317,
+  longitud: -74.06203,
+});
+
+/** Punto de búsqueda inicial: la sede. El usuario lo cambia escribiendo coordenadas o haciendo clic en el mapa. */
+export const PUNTO_INICIAL = Object.freeze({ latitud: SEDE.latitud, longitud: SEDE.longitud });
 
 export const RADIO_INICIAL_KM = 10;
 export const RADIO_MIN_KM = 1;
