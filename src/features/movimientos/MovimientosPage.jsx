@@ -175,7 +175,7 @@ export function MovimientosPage() {
 
       if (tipo === "ENTRADA" && motivoCodigo === "COMPRA") {
         datosMovimiento.costo_unitario = Number(costoUnitario);
-        datosMovimiento.proveedor_id = Number(proveedorId);
+        datosMovimiento.proveedor_id = proveedorId;
       }
 
       const respuesta =
