@@ -110,7 +110,7 @@ export function HistorialPage() {
         producto_id: productoId || undefined,
         tipo: tipo || undefined,
         desde: desde || undefined,
-        hasta: hasta || undefined,
+        hasta: hasta ? `${hasta}T23:59:59` : undefined,
         page: pagina,
         size: tamanoPagina,
       });
