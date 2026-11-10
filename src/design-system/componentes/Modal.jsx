@@ -74,9 +74,12 @@ export function Modal({ open, onClose, title, children, footer, className }) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={cn("w-full max-w-lg rounded-xl bg-marca-superficie shadow-xl focus:outline-none", className)}
+        className={cn(
+          "flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-marca-superficie shadow-xl focus:outline-none",
+          className,
+        )}
       >
-        <div className="flex items-center justify-between border-b border-marca-borde px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-marca-borde px-6 py-4">
           <h2 id={titleId} className="text-lg font-semibold text-marca-texto">
             {title}
           </h2>
@@ -89,10 +92,16 @@ export function Modal({ open, onClose, title, children, footer, className }) {
             <span aria-hidden="true">×</span>
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 text-sm text-marca-texto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4 text-sm text-marca-texto">
           {children}
         </div>
-        {footer && <div className="flex justify-end gap-2 border-t border-marca-borde px-6 py-3">{footer}</div>}
+
+        {footer && (
+          <div className="flex shrink-0 justify-end gap-2 border-t border-marca-borde px-6 py-3">
+            {footer}
+          </div>
+        )}
+
       </div>
     </div>,
     document.body,

@@ -156,8 +156,8 @@ describe("S4 · Alertas y analítica", () => {
     expect(await analitica.listarAlertas()).toHaveLength(2);
     expect(await analitica.listarAlertas("AGOTADO")).toHaveLength(1);
     expect(await analitica.resumenAlertas()).toEqual({ bajo_stock: 1, agotado: 1, total: 2 });
-    expect((await analitica.tablero()).valor_inventario).toBeNull();
-    expect(await analitica.consumo("2026-10-01", "2026-10-31")).toHaveLength(1);
+    expect((await analitica.tablero()).valor_inventario).toBe("13300.0000");
+    expect(await analitica.consumo("2026-10-01", "2026-10-31")).toHaveLength(3);
     expect((await analitica.cobertura())[0].dias_cobertura).toBe("70.0");
     expect(await analitica.exportar("inventario")).toBeInstanceOf(Blob);
   });
