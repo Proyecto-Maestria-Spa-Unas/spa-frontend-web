@@ -34,3 +34,12 @@ describe("TableroPage · mapa y gráficos por rol", () => {
     expect(screen.getByText("tablero de decisiones")).toBeInTheDocument();
   });
 });
+
+describe("TableroPage · encabezado (F16)", () => {
+  it("usa el mismo encabezado de las demás pantallas: marca, título y descripción", () => {
+    mostrar(["alerta.consultar"]);
+    expect(screen.getByText("NAILSSPA")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Alertas y tablero" })).toBeInTheDocument();
+    expect(screen.getByText(/Revisa los productos por reponer/)).toBeInTheDocument();
+  });
+});

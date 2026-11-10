@@ -40,6 +40,7 @@ describe("UsuariosPage · lista", () => {
   it("muestra cargando y luego la tabla con nombre, usuario, rol y estado", async () => {
     renderizar();
     expect(screen.getByRole("heading", { name: "Usuarios" })).toBeInTheDocument();
+    expect(screen.getByText("NAILSSPA")).toBeInTheDocument(); // encabezado igual al de las demás pantallas (F16)
     expect(screen.getByRole("status")).toHaveTextContent("Cargando usuarios");
     expect(await screen.findByRole("table", { name: "Usuarios del sistema" })).toBeInTheDocument();
     expect(screen.getAllByRole("columnheader").map((c) => c.textContent)).toEqual([

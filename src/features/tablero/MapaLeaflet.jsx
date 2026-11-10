@@ -102,7 +102,9 @@ export function MapaLeaflet({ punto, radioKm, coleccion, alElegirPunto, sede }) 
     if (!grupo) return;
     grupo.clearLayers();
     L.geoJSON(coleccion, {
-      pointToLayer: (_feature, latlng) => L.marker(latlng, { icon: ICONO_PROVEEDOR }),
+      // `title` da el nombre accesible al marcador (axe: aria-command-name).
+      pointToLayer: (feature, latlng) =>
+        L.marker(latlng, { icon: ICONO_PROVEEDOR, title: `Proveedor: ${feature.properties.nombre}` }),
       onEachFeature: (feature, capa) => capa.bindPopup(contenidoGlobo(feature.properties)),
     }).addTo(grupo);
   }, [coleccion]);

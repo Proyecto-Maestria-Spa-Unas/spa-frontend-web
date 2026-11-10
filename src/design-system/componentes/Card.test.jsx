@@ -31,4 +31,15 @@ describe("Card", () => {
     expect(tarjeta).toHaveClass("w-64");
     expect(tarjeta.className).toContain("bg-marca-superficie");
   });
+
+  it("usa h3 por defecto y permite cambiar el nivel del título (orden de encabezados, F16)", () => {
+    const { rerender } = render(<Card title="Resumen">Contenido</Card>);
+    expect(screen.getByRole("heading", { level: 3, name: "Resumen" })).toBeInTheDocument();
+    rerender(
+      <Card title="Resumen" headingLevel={2}>
+        Contenido
+      </Card>,
+    );
+    expect(screen.getByRole("heading", { level: 2, name: "Resumen" })).toBeInTheDocument();
+  });
 });
