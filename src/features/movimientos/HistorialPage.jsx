@@ -220,8 +220,8 @@ export function HistorialPage() {
 
   // Anular un movimiento
   const confirmarAnulacion = async () => {
-    if (!movimientoSeleccionado || !motivoAnulacion.trim()) {
-      setError("Debes indicar el motivo de la anulación.");
+    if (!movimientoSeleccionado || motivoAnulacion.trim().length < 5) {
+      setError("El motivo de la anulación debe tener al menos 5 caracteres.");
       return;
     }
 
@@ -737,7 +737,7 @@ export function HistorialPage() {
             />
 
             <p className="mt-1 text-right text-xs text-marca-texto">
-              {motivoAnulacion.length}/500 caracteres
+              Mínimo 5 caracteres · {motivoAnulacion.length}/500
             </p>
           </div>
 
@@ -764,7 +764,7 @@ export function HistorialPage() {
             <Button
               type="button"
               variant="primary"
-              disabled={anulando || !motivoAnulacion.trim()}
+              disabled={anulando || motivoAnulacion.trim().length < 5}
               onClick={confirmarAnulacion}
             >
               {anulando ? "Anulando..." : "Confirmar anulación"}
