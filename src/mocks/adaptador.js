@@ -319,12 +319,23 @@ const RUTAS = [
   }],
   ["get", /^\/analitica\/tablero$/, "analitica.consultar", () => ({
     productos_por_estado: estado.productos.reduce((acc, p) => ({ ...acc, [p.estado]: (acc[p.estado] ?? 0) + 1 }), {}),
-    valor_inventario: null,
-    consumo_30_dias: "150.000",
-    top_rotacion: [{ producto_id: PRODUCTOS[1].id, codigo: "REM-001", nombre: "Acetona pura", consumo: "150.000" }],
+    valor_inventario: "13300.0000",
+    consumo_30_dias: "182.000",
+    top_rotacion: [
+      { producto_id: PRODUCTOS[1].id, codigo: "REM-001", nombre: "Acetona pura", consumo: "150.000" },
+      { producto_id: PRODUCTOS[0].id, codigo: "ESM-001", nombre: "Esmalte rojo 15 ml", consumo: "26.000" },
+      { producto_id: PRODUCTOS[2].id, codigo: "DES-004", nombre: "Guantes de nitrilo talla M", consumo: "6.000" },
+    ],
   })],
-  ["get", /^\/analitica\/consumo$/, "analitica.consultar", () => [{ clave: "Removedores", cantidad: "150.000" }]],
-  ["get", /^\/analitica\/cobertura$/, "analitica.consultar", () => [{ producto_id: PRODUCTOS[1].id, codigo: "REM-001", nombre: "Acetona pura", stock_actual: "350.000", consumo_diario_promedio: "5.000", dias_cobertura: "70.0" }]],
+  ["get", /^\/analitica\/consumo$/, "analitica.consultar", (c) => c.params?.agrupar_por === "producto"
+    ? [{ clave: "REM-001", cantidad: "150.000" }, { clave: "ESM-001", cantidad: "26.000" }, { clave: "DES-004", cantidad: "6.000" }]
+    : [{ clave: "Removedores", cantidad: "150.000" }, { clave: "Esmaltes", cantidad: "26.000" }, { clave: "Desechables", cantidad: "6.000" }]],
+  ["get", /^\/analitica\/cobertura$/, "analitica.consultar", () => [
+    { producto_id: PRODUCTOS[1].id, codigo: "REM-001", nombre: "Acetona pura", stock_actual: "350.000", consumo_diario_promedio: "5.000", dias_cobertura: "70.0" },
+    { producto_id: PRODUCTOS[0].id, codigo: "ESM-001", nombre: "Esmalte rojo 15 ml", stock_actual: "24.000", consumo_diario_promedio: "0.867", dias_cobertura: "27.7" },
+    { producto_id: PRODUCTOS[2].id, codigo: "DES-004", nombre: "Guantes de nitrilo talla M", stock_actual: "0.000", consumo_diario_promedio: "0.200", dias_cobertura: "0.0" },
+    { producto_id: PRODUCTOS[3].id, codigo: "HER-010", nombre: "Lima de cartón 180/240", stock_actual: "12.000", consumo_diario_promedio: "0.000", dias_cobertura: null },
+  ]],
   ["get", /^\/analitica\/kardex$/, "analitica.consultar", (c) => {
     const producto = estado.productos.find((p) => p.id === c.params?.producto_id);
     if (!producto) throw problema(c, 404, "RECURSO_NO_EXISTE", "El producto no existe");
