@@ -77,7 +77,10 @@ export function Modal({ open, onClose, title, children, footer, className }) {
         className={cn("w-full max-w-lg rounded-xl bg-marca-superficie shadow-xl focus:outline-none", className)}
       >
         <div className="flex items-center justify-between border-b border-marca-borde px-6 py-4">
-          <h2 id={titleId} className="text-lg font-semibold text-marca-texto">
+          <h2
+            id={titleId}
+            className="font-heading text-xl font-bold text-marca-primario"
+          >
             {title}
           </h2>
           <button
