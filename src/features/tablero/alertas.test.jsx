@@ -45,10 +45,13 @@ describe("Alertas · contador del menú y lista", () => {
 
   it("el filtro Agotado deja solo los agotados", async () => {
     abrir("/tablero", TOKENS.admin);
-    await screen.findByRole("table");
+    await screen.findByRole("table", { name: "Productos que requieren reposición" });
     fireEvent.change(screen.getByLabelText("Estado"), { target: { value: "AGOTADO" } });
     expect(await screen.findByText("1 producto en alerta")).toBeInTheDocument();
-    expect(screen.queryByText("Acetona pura")).not.toBeInTheDocument();
+    // El tablero de decisiones (gráficos) también nombra productos: se mira solo la tabla de alertas.
+    const tabla = screen.getByRole("table", { name: "Productos que requieren reposición" });
+    expect(within(tabla).queryByText("Acetona pura")).not.toBeInTheDocument();
+    expect(within(tabla).getByText("Guantes de nitrilo talla M")).toBeInTheDocument();
   });
 
   it("al reponer un producto, el contador del menú baja al cambiar de pantalla", async () => {
