@@ -17,7 +17,7 @@ import {
 } from "./recuperacion";
 
 const ENLACE_A_LOGIN =
-  "mt-4 block text-center text-sm text-marca-primario underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-primario";
+  "mt-4 block text-center text-sm text-marca-primario-hover underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-primario";
 
 /**
  * X3 · Recuperar contraseña (HU-01). Una sola pantalla con dos pasos:

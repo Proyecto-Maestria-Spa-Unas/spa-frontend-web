@@ -1,7 +1,8 @@
 @theme {
   /*Colores específicos del manual de marca*/
   --color-marca-primario: #C77D9F;
-  --color-marca-primario-hover: #A85F82;
+  --color-marca-primario-hover: #8F4B6C; /* F16: 5,36:1 sobre #FCEAF1 y 5,68:1 sobre #F5F5F5 (antes #A85F82, 3,93:1) */
+  --color-marca-primario-boton: #A85F82; /* F16: fondo del botón principal, texto blanco 4,54:1 (antes #C77D9F, 3,06:1) */
   --color-marca-acento: #EBB4CB;
   --color-marca-superficie: #FFFFFF;
   --color-marca-fondo: #F5F5F5;

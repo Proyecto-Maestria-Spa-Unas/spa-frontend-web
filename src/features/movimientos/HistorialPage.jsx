@@ -294,8 +294,8 @@ export function HistorialPage() {
 
         <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
-              NAILSPA
+            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario-hover">
+              NAILSSPA
             </p>
             <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
               Historial de movimientos
@@ -310,7 +310,7 @@ export function HistorialPage() {
       {/* Filtros */}
       <div className="rounded-xl border border-marca-borde bg-marca-superficie p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-base font-semibold text-marca-primario">
+          <h3 className="text-base font-semibold text-marca-primario-hover">
             Filtrar movimientos
           </h3>
 
@@ -432,7 +432,7 @@ export function HistorialPage() {
 
             <p className="text-sm text-marca-texto">
               Total de registros:{" "}
-              <span className="font-semibold text-marca-primario">
+              <span className="font-semibold text-marca-primario-hover">
                 {total}
               </span>
             </p>
