@@ -28,7 +28,11 @@ export function TableroPage() {
       <EncabezadoPagina
         icono={ICONO_ALERTAS}
         titulo="Alertas y tablero"
-        descripcion="Revisa los productos por reponer, analiza el consumo y exporta los datos."
+        descripcion={
+          tiene("analitica.consultar")
+            ? "Revisa los productos por reponer, analiza el consumo y exporta los datos."
+            : "Revisa los productos por reponer."
+        }
       />
       <ListaAlertas />
       {/* Gráficos de decisión (F15): requieren analitica.consultar, como el mapa y la exportación. */}
