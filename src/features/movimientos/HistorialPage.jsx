@@ -83,7 +83,7 @@ export function HistorialPage() {
   useEffect(() => {
     const cargarProductos = async () => {
       try {
-        const respuesta = await listarProductos({ page: 1, size: 100 });
+        const respuesta = await listarProductos({ page: 1, size: 100, incluir_descontinuados: true });
 
         setProductos(
           Array.isArray(respuesta)
