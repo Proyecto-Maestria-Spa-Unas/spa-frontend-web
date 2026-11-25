@@ -9,6 +9,7 @@ import { cambiarEstadoUsuario, crearUsuario, actualizarUsuario, listarRoles, lis
 import { Alert } from "../../design-system/componentes/Alert";
 import { Button } from "../../design-system/componentes/Button";
 import { Card } from "../../design-system/componentes/Card";
+import { EncabezadoPagina } from "../../design-system/componentes/EncabezadoPagina";
 import { Modal } from "../../design-system/componentes/Modal";
 import { Select } from "../../design-system/componentes/Select";
 import { cn } from "../../utils/cn";
@@ -20,6 +21,16 @@ import { InterruptorEstado } from "./InterruptorEstado";
 import { numerosDePagina, TAMANOS_PAGINA } from "./paginacion";
 
 const COLUMNAS = ["Nombre", "Usuario", "Rol", "Estado", "Acciones"];
+
+// Tres personas (trazos de 24x24, mismo estilo de línea que el ícono de Inventario).
+const ICONO_USUARIOS = (
+  <>
+    <circle cx="12" cy="7.500" r="3" />
+    <path d="M6.500 20v-3.500a5.500 5.500 0 0 1 11 0V20Z" />
+    <path d="M7.500 5.200A2.800 2.800 0 1 0 4.500 9.500M4.500 13.500A4.500 4.500 0 0 0 2 17.500V20h3" />
+    <path d="M16.500 5.200A2.800 2.800 0 1 1 19.500 9.500M19.500 13.500A4.500 4.500 0 0 1 22 17.500V20h-3" />
+  </>
+);
 const DURACION_AVISO_MS = 4000; // manual de marca, 4.5: los avisos duran 4 s y se pueden cerrar a mano
 
 function EstadoUsuario({ activo }) {
@@ -138,10 +149,12 @@ export function UsuariosPage({ duracionAviso = DURACION_AVISO_MS }) {
 
   return (
     <section>
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-heading text-[1.375rem] font-semibold text-marca-texto">Usuarios</h2>
-        <Button onClick={() => setFormulario({ usuario: null })}>Nuevo usuario</Button>
-      </div>
+      <EncabezadoPagina
+        icono={ICONO_USUARIOS}
+        titulo="Usuarios"
+        descripcion="Crea y administra los usuarios que ingresan a NailsSpa."
+        acciones={<Button onClick={() => setFormulario({ usuario: null })}>Nuevo usuario</Button>}
+      />
 
       {aviso && (
         <Alert variant={aviso.variante} onClose={() => setAviso(null)} className="mt-4">
@@ -164,31 +177,31 @@ export function UsuariosPage({ duracionAviso = DURACION_AVISO_MS }) {
         {estado === "listo" && lista.items.length === 0 && <p>No hay usuarios registrados.</p>}
 
         {estado === "listo" && lista.items.length > 0 && (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-marca-borde">
             <table className="w-full text-left text-sm">
               <caption className="sr-only">Usuarios del sistema</caption>
-              <thead>
-                <tr className="border-b border-marca-borde">
+              <thead className="bg-marca-enfoque font-heading text-xs uppercase tracking-wider text-marca-primario-hover">
+                <tr>
                   {COLUMNAS.map((columna) => (
                     <th
                       key={columna}
                       scope="col"
-                      className="px-3 py-2 font-heading text-[0.8125rem] font-semibold uppercase tracking-wide"
+                      className="px-4 py-3 font-semibold"
                     >
                       {columna}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-marca-borde">
                 {lista.items.map((u) => {
                   const esPropio = u.id === sesion?.id;
                   return (
-                    <tr key={u.id} className="border-b border-marca-borde last:border-0">
-                      <td className="px-3 py-2">{u.nombre_completo}</td>
-                      <td className="px-3 py-2">{u.correo}</td>
-                      <td className="px-3 py-2">{etiquetaRol(u.rol, roles)}</td>
-                      <td className="px-3 py-2">
+                    <tr key={u.id} className="transition-colors duration-200 hover:bg-marca-superficie-hover">
+                      <td className="px-4 py-3 font-semibold text-marca-primario-hover">{u.nombre_completo}</td>
+                      <td className="px-4 py-3 text-marca-texto-secundario">{u.correo}</td>
+                      <td className="px-4 py-3 text-marca-texto-secundario">{etiquetaRol(u.rol, roles)}</td>
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <InterruptorEstado
                             activo={u.activo}
@@ -200,7 +213,7 @@ export function UsuariosPage({ duracionAviso = DURACION_AVISO_MS }) {
                           <EstadoUsuario activo={u.activo} />
                         </div>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3">
                         <Button
                           variant="secondary"
                           aria-label={`Editar a ${u.nombre_completo}`}

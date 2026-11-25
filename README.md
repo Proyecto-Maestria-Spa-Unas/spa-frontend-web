@@ -1,4 +1,4 @@
-# Spa de Uñas Frontend – React + Vite + Tailwind CSS
+# NailsSpa Frontend – React + Vite + Tailwind CSS
 
 Este proyecto corresponde al frontend del sistema de inventario de un spa de uñas, desarrollado con React, Vite y Tailwind CSS, con el objetivo de construir una interfaz moderna, rápida y mantenible para la consulta y actualización del inventario de productos, materiales e insumos.
 

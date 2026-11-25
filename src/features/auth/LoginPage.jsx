@@ -58,10 +58,10 @@ export function LoginPage() {
         <div className="mb-6 text-center">
           {/* Decorativo: el nombre de la marca ya está en el encabezado. */}
           <img src="/logo.png" alt="" className="mx-auto mb-3 h-16 w-16" />
-          <h1 className="font-heading text-2xl font-semibold text-marca-primario">Spa de Uñas</h1>
+          <h1 className="font-heading text-2xl font-semibold text-marca-primario-hover">NailsSpa</h1>
           <p className="text-sm text-marca-texto">Control de inventario</p>
         </div>
-        <Card title="Ingresar">
+        <Card title="Ingresar" headingLevel={2}>
           <form className="space-y-4" onSubmit={enviar} noValidate aria-busy={enviando}>
             {aviso && <Alert variant={aviso.variante}>{aviso.texto}</Alert>}
             <Input
@@ -92,7 +92,7 @@ export function LoginPage() {
           </form>
           <Link
             to={ROUTES.RECUPERAR}
-            className="mt-4 block text-center text-sm text-marca-primario underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-primario"
+            className="mt-4 block text-center text-sm text-marca-primario-hover underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-primario"
           >
             ¿Olvidaste tu contraseña?
           </Link>

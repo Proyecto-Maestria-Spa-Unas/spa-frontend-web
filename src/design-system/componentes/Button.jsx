@@ -2,7 +2,7 @@ import { cn } from "../../utils/cn";
 
 const VARIANTES = {
   primary: `
-    bg-marca-primario text-white
+    bg-marca-primario-boton text-white
     enabled:hover:bg-marca-primario-hover
     enabled:hover:shadow-md
   `,
@@ -11,7 +11,7 @@ const VARIANTES = {
     border border-marca-borde
     enabled:hover:bg-marca-primario/10
     enabled:hover:border-marca-primario
-    enabled:hover:text-marca-primario
+    enabled:hover:text-marca-primario-hover
     enabled:hover:shadow-sm
   `,
   danger: `

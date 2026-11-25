@@ -472,8 +472,8 @@ export function InventarioPage() {
         {/* Nombre y descripción */}
         <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
-              NAILSPA
+            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario-hover">
+              NAILSSPA
             </p>
 
             <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
@@ -941,7 +941,7 @@ export function InventarioPage() {
                   <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-marca-primario-hover">
                     <Link
                       to={`/inventario/${producto.id}`}
-                    className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-enfoque"
+                    className="rounded hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-primario-hover focus-visible:ring-offset-2"
                     >
                       {producto.nombre}
                     </Link>

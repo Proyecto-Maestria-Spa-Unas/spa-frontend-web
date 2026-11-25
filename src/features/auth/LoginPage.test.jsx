@@ -52,7 +52,7 @@ describe("validarLogin", () => {
 describe("LoginPage", () => {
   it("muestra la identidad, los campos y el enlace para recuperar la contraseña", () => {
     renderizar();
-    expect(screen.getByRole("heading", { name: "Spa de Uñas" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "NailsSpa" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Ingresar" })).toBeInTheDocument();
     expect(correo()).toHaveAttribute("type", "email");
     expect(contrasena()).toHaveAttribute("type", "password");

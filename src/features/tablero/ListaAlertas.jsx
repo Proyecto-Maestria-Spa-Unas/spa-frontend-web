@@ -91,35 +91,35 @@ export function ListaAlertas() {
             <p className="mb-2">
               {alertas.length} {alertas.length === 1 ? "producto" : "productos"} en alerta
             </p>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-marca-borde">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Productos que requieren reposición</caption>
-                <thead>
-                  <tr className="border-b border-marca-borde">
+                <thead className="bg-marca-enfoque font-heading text-xs uppercase tracking-wider text-marca-primario-hover">
+                  <tr>
                     {COLUMNAS.map(({ titulo, numerica }) => (
                       <th
                         key={titulo}
                         scope="col"
-                        className={`px-3 py-2 font-heading text-[0.8125rem] font-semibold uppercase tracking-wide ${numerica ? "text-right" : ""}`}
+                        className={`px-4 py-3 font-semibold ${numerica ? "text-right" : ""}`}
                       >
                         {titulo}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-marca-borde">
                   {alertas.map((a) => (
-                    <tr key={a.producto_id} className="border-b border-marca-borde last:border-0">
-                      <td className="px-3 py-2">
-                        <span className="block font-medium">{a.nombre}</span>
-                        <span className="block text-xs">{a.codigo}</span>
+                    <tr key={a.producto_id} className="transition-colors duration-200 hover:bg-marca-superficie-hover">
+                      <td className="px-4 py-3">
+                        <span className="block font-semibold text-marca-primario-hover">{a.nombre}</span>
+                        <span className="block text-xs text-marca-texto-secundario">{a.codigo}</span>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-4 py-3">
                         <EstadoBadge estado={a.estado} />
                       </td>
-                      <td className="px-3 py-2 text-right">{formatoCantidad(a.stock_actual)}</td>
-                      <td className="px-3 py-2 text-right">{formatoCantidad(a.stock_minimo)}</td>
-                      <td className="px-3 py-2 text-right font-semibold">{formatoCantidad(a.faltante)}</td>
+                      <td className="px-4 py-3 text-right text-marca-texto-secundario">{formatoCantidad(a.stock_actual)}</td>
+                      <td className="px-4 py-3 text-right text-marca-texto-secundario">{formatoCantidad(a.stock_minimo)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-marca-texto-secundario">{formatoCantidad(a.faltante)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -83,7 +83,7 @@ export function HistorialPage() {
   useEffect(() => {
     const cargarProductos = async () => {
       try {
-        const respuesta = await listarProductos({ page: 1, size: 100 });
+        const respuesta = await listarProductos({ page: 1, size: 100, incluir_descontinuados: true });
 
         setProductos(
           Array.isArray(respuesta)
@@ -105,7 +105,7 @@ export function HistorialPage() {
       setCargando(true);
       setError("");
       setMensaje("");
-    const respuesta = await listarMovimientos({
+      const respuesta = await listarMovimientos({
         producto_id: productoId || undefined,
         tipo: tipo || undefined,
         desde: desde ? `${desde}T00:00:00-05:00` : undefined,
@@ -309,7 +309,7 @@ export function HistorialPage() {
       {/* Filtros */}
       <div className="rounded-xl border border-marca-borde bg-marca-superficie p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-base font-semibold text-marca-primario">
+          <h3 className="text-base font-semibold text-marca-primario-hover">
             Filtrar movimientos
           </h3>
 
@@ -431,7 +431,7 @@ export function HistorialPage() {
 
             <p className="text-sm text-marca-texto">
               Total de registros:{" "}
-              <span className="font-semibold text-marca-primario">
+              <span className="font-semibold text-marca-primario-hover">
                 {total}
               </span>
             </p>

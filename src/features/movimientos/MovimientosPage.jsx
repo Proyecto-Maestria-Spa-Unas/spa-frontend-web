@@ -220,7 +220,7 @@ export function MovimientosPage() {
   }, [error]);
 
   const claseEtiqueta = "mb-2 block text-sm font-semibold text-marca-texto";
-  const claseObligatorio = "ml-1 font-bold text-marca-primario";
+  const claseObligatorio = "ml-1 font-bold text-marca-primario-hover";
 
   return (
     <section>
@@ -251,8 +251,8 @@ export function MovimientosPage() {
         {/* Nombre y descripción */}
         <div className="flex flex-1 flex-col gap-2">
           <div>
-            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
-              NAILSPA
+            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario-hover">
+              NAILSSPA
             </p>
 
             <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
@@ -301,7 +301,7 @@ export function MovimientosPage() {
           </h3>
 
           <p className="mb-5 text-xs text-marca-texto">
-            Los campos marcados con <span className="font-bold text-marca-primario">*</span> son obligatorios.
+            Los campos marcados con <span className="font-bold text-marca-primario-hover">*</span> son obligatorios.
           </p>
 
           {cargando ? (

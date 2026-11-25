@@ -9,7 +9,7 @@ export function MainLayout() {
   const { usuario, tiene, cerrarSesion } = useAuth();
   return (
     <div className="min-h-screen bg-marca-fondo">
-      <header className="flex items-center justify-between border-b border-marca-borde bg-marca-superficie px-6 py-4">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-marca-borde bg-marca-superficie px-6 py-4">
         <div className="flex items-center gap-3">
           <img
             src="/logo.png"
@@ -26,15 +26,15 @@ export function MainLayout() {
             </p>
           </div>
         </div>
-        <nav aria-label="Principal" className="flex gap-4 text-sm">
+        <nav aria-label="Principal" className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {MENU.filter((m) => tiene(m.permiso)).map((m) => (
             <span key={m.ruta} className="inline-flex items-center gap-1">
               <NavLink
                 to={m.ruta}
                 className={({ isActive }) =>
                   `rounded-lg px-3 py-2 text-sm transition-colors ${isActive
-                    ? "bg-[#FCEAF1] font-semibold text-[#A85F82]"
-                    : "text-marca-texto hover:bg-[#FFF5F8] hover:text-[#A85F82]"
+                    ? "bg-marca-enfoque font-semibold text-marca-primario-hover"
+                    : "text-marca-texto hover:bg-marca-superficie-hover hover:text-marca-primario-hover"
                   }`
                 }
               >
@@ -44,12 +44,12 @@ export function MainLayout() {
             </span>
           ))}
         </nav>
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex flex-wrap items-center gap-3 text-sm">
           <span>{usuario?.nombre_completo}</span>
           <Button
             variant="secondary"
             onClick={cerrarSesion}
-            className="border-[#E8C5D5] bg-[#FCEAF1] text-[#A85F82] hover:bg-[#F8DCE8]"
+            className="border-marca-acento bg-marca-enfoque text-marca-primario-hover hover:bg-marca-acento/30"
           >
             Salir
           </Button>

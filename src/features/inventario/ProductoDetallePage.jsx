@@ -60,7 +60,7 @@ export function ProductoDetallePage() {
 
   return (
     <section className="space-y-4">
-      <Link to={ROUTES.INVENTARIO} className="text-sm text-marca-primario underline">
+      <Link to={ROUTES.INVENTARIO} className="text-sm text-marca-primario-hover underline">
         ← Volver al inventario
       </Link>
       <h2 className="text-xl font-semibold">{producto ? `${producto.nombre} · ${producto.codigo}` : "Detalle del producto"}</h2>
