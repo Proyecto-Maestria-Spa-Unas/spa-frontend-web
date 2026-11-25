@@ -295,7 +295,29 @@ const RUTAS = [
   ["get", /^\/movimientos$/, "movimiento.consultar", (c, _m, _b, u) => {
     const propios = u.rol === "MANICURISTA";
     const p = c.params ?? {};
-    const items = estado.movimientos.filter((m) => (!propios || m.registrado_por === u.id) && (!p.producto_id || m.producto_id === p.producto_id) && (!p.tipo || m.tipo === p.tipo));
+    const desde = p.desde
+      ? new Date(p.desde.length === 10 ? `${p.desde}T00:00:00-05:00` : p.desde)
+      : null;
+
+    const hasta = p.hasta
+      ? new Date(
+        p.hasta.length === 10
+          ? `${p.hasta}T23:59:59.999-05:00`
+          : p.hasta
+      )
+      : null;
+
+    const items = estado.movimientos.filter((m) => {
+      const fecha = new Date(m.ocurrido_en);
+
+      return (
+        (!propios || m.registrado_por === u.id) &&
+        (!p.producto_id || m.producto_id === p.producto_id) &&
+        (!p.tipo || m.tipo === p.tipo) &&
+        (!desde || fecha >= desde) &&
+        (!hasta || fecha <= hasta)
+      );
+    });
     return pagina([...items].reverse(), p);
   }],
   ["get", /^\/movimientos\/(\d+)$/, "movimiento.consultar", (c, [id]) => estado.movimientos.find((m) => m.id === Number(id)) ?? Promise.reject(problema(c, 404, "RECURSO_NO_EXISTE", "El movimiento no existe"))],

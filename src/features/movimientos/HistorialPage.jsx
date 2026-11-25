@@ -105,12 +105,11 @@ export function HistorialPage() {
       setCargando(true);
       setError("");
       setMensaje("");
-
-      const respuesta = await listarMovimientos({
+    const respuesta = await listarMovimientos({
         producto_id: productoId || undefined,
         tipo: tipo || undefined,
-        desde: desde || undefined,
-        hasta: hasta ? `${hasta}T23:59:59` : undefined,
+        desde: desde ? `${desde}T00:00:00-05:00` : undefined,
+        hasta: hasta ? `${hasta}T23:59:59-05:00` : undefined,
         page: pagina,
         size: tamanoPagina,
       });
