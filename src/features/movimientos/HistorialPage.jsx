@@ -105,7 +105,6 @@ export function HistorialPage() {
       setCargando(true);
       setError("");
       setMensaje("");
-
       const respuesta = await listarMovimientos({
         producto_id: productoId || undefined,
         tipo: tipo || undefined,
@@ -294,8 +293,8 @@ export function HistorialPage() {
 
         <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario-hover">
-              NAILSSPA
+            <p className="font-heading text-xs font-bold tracking-[0.25em] text-marca-primario">
+              NAILSPA
             </p>
             <h2 className="mt-1 font-heading text-3xl font-bold tracking-tight text-marca-primario-hover">
               Historial de movimientos
